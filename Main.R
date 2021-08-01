@@ -71,15 +71,51 @@ current_publication <- publication_list[48,]
 
 publication_list <-get_publications(id)
 publication_list <- curate_publication_list(publication_list)
-publication_list
+publication_list <- clean_publication_list(publication_list,id)
 
 
-resp <- get_scholar_resp("https://scholar.google.fr/citations?view_op=view_citation&hl=en&user=ulkW7fgAAAAJ&sortby=pubdate&citation_for_view=ulkW7fgAAAAJ:5awf1xo2G04C")
+resp <- get_scholar_resp("https://scholar.google.fr/citations?view_op=view_citation&hl=en&user=ulkW7fgAAAAJ&sortby=pubdate&citation_for_view=ulkW7fgAAAAJ:eMMeJKvmdy0C")
 if (is.null(resp)){
   errorMessage <- paste("The scholar page for this publication is empty\n The function tried to fetch the following page:\n'",pub_page,"'",sep="")
   stop(errorMessage)
 } 
 resp_parsed <- read_html(resp)
+
+citation_history <- fetch_publication_citation_history(resp_parsed)
+
+current_publication<-publication_list[1,]
+years <- html_nodes(resp_parsed,".gsc_oci_g_t")
+cites_per_year <- html_nodes(resp_parsed,".gsc_oci_g_al")
+years <- html_text(years)
+cites_per_year <- html_text(cites_per_year)
+citation_history <- years
+citation_history <- vector(mode="list", length=length(years))
+names(citation_history) <- years
+citation_history<- ""
+for (i in 1:length(years)){
+  year_info <- paste(years[i],":",cites_per_year[i], sep="")
+  citation_history <- paste(citation_history,year_info, sep=";")
+}
+
+#We remove the first ";" at the begining of the string
+sub('.', '', citation_history)
+
+
+
+current_publication$citation_history <- citation_history
+
+#citation_history <- do.call(rbind, Map(data.frame, years=years, cites=cites_per_year))
+
+current_publication$citation_history <- citation_history
+
+if(!is.null(current_publication$cites)){
+  years <- html_nodes(resp_parsed,".gsc_oci_g_t")
+  years <- html_text(years)
+  length(years)
+}
+
+
+
 #We can access all article information from the divs with the class "gsc_oci_value"
 #Need to remember to add "." to the class or returns null results
 values <- html_nodes(resp_parsed,".gsc_oci_value")

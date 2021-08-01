@@ -125,6 +125,9 @@ clean_publication_data <- function(publication, author_id){
     publication$journal <- NA
   }
   
+  citation_history <- fetch_publication_citation_history(resp_parsed)
+  
+  publication$citation_history <- citation_history
   
   #publication$author <- html_text(values[1])
   #publication$date <- html_text(values[2])
@@ -132,6 +135,33 @@ clean_publication_data <- function(publication, author_id){
   #publication$number <- html_text(values[4])
   return(publication)
 }
+
+##' Gets citation history for a specific publication
+##'
+##' Extracts citation history from the google scholar page of a publication based on the barchart embedded in the page
+##' @param resp_parsed HTML-parsed version of the response page
+##'
+##' @return the citation history of a specific publication as a string "year:citations;year:citations..."
+fetch_publication_citation_history <- function(resp_parsed){
+  years <- html_nodes(resp_parsed,".gsc_oci_g_t")
+  cites_per_year <- html_nodes(resp_parsed,".gsc_oci_g_al")
+  years <- html_text(years)
+  cites_per_year <- html_text(cites_per_year)
+  citation_history <- years
+  citation_history <- vector(mode="list", length=length(years))
+  names(citation_history) <- years
+  citation_history<- ""
+  for (i in 1:length(years)){
+    year_info <- paste(years[i],":",cites_per_year[i], sep="")
+    citation_history <- paste(citation_history,year_info, sep=";")
+  }
+  
+  #We remove the first ";" at the begining of the string
+  citation_history <- sub('.', '', citation_history)
+  
+  return (citation_history)
+}
+
 
 ##' Look for the information of the publication venue within a publication details page on Google scholar
 ##' 
