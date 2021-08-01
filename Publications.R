@@ -10,7 +10,7 @@
 ##'
 ##' @return publication_list the updated publication list with more accurate information
 clean_publication_list <- function(publication_list, author_id){
-  sleep_time <- 1.5
+  sleep_time <- x1 <- runif(1, 1.1, 3.9)
   if(missing(author_id)) {
     error("Parameter 'author_id' should be set")
   }
@@ -26,15 +26,23 @@ clean_publication_list <- function(publication_list, author_id){
   #First we need to curate the publication list to avoid errors when fetching more accurate information
   publication_list <- curate_publication_list(publication_list)
   
+  cleaned_list <- c()
   pb = txtProgressBar(min = 0, max = nrow(publication_list), initial = 0, style= 3)
   for (i in 1:nrow(publication_list)){
     setTxtProgressBar(pb,i)
     current_publication <- publication_list[i,]
-    publication_list[i,] <- clean_publication_data(current_publication,author_id)
+    current_publication <- clean_publication_data(current_publication,author_id)
+    print("PRINT CURRENT PUBLICATION START")
+    print(current_publication)
+    print("PRINT CURRENT PUBLICATION END")
+    cleaned_list <- rbind(cleaned_list, current_publication)
     Sys.sleep(sleep_time)
   }
   close(pb)
-  return (publication_list)
+  print("CLEANED LIST START")
+  print(cleaned_list)
+  print("CLEANED LIST END")
+  return (cleaned_list)
   
 }
 
@@ -128,6 +136,10 @@ clean_publication_data <- function(publication, author_id){
   citation_history <- fetch_publication_citation_history(resp_parsed)
   
   publication$citation_history <- citation_history
+  
+  print("PUBLICATION START")
+  print(publication)
+  print("PUBLICATION END")
   
   #publication$author <- html_text(values[1])
   #publication$date <- html_text(values[2])

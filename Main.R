@@ -61,6 +61,9 @@ resp <- get_scholar_resp("https://scholar.google.fr/citations?view_op=view_citat
 
 current_publication <- publication_list[1,]
 
+
+publication_list <-get_publications(id)
+publication_list <- publication_list[c(5,7),]
 publication_list <- clean_publication_list(publication_list,id)
 
 clean_publication_data(publication_list[1,],id)
