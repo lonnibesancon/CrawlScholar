@@ -247,7 +247,7 @@ curate_publication_list <- function(publication_list){
     return (publication_list)
   }
   publication_list <- publication_list[-index_of_publications_to_remove,]
-  result_message <- paste(length(index_of_publications_to_remove)," publications were removed from the list of publications",sep="")
+  result_message <- paste(length(index_of_publications_to_remove)," publications were removed from the list of publications (",index_of_publications_to_remove,")",sep="")
   print(result_message)
   return (publication_list)
 }

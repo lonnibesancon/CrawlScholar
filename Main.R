@@ -30,16 +30,25 @@ length(list)
 
 
 for(i in 1:nrow(list)){
+  print(i)
   id <- get_scholar_id(last_name = list$family[i], first_name = list$first[i])
   list$id[i] <- id
 }
 
+id <- get_scholar_id(last_name = "Leyrat", first_name = "Clemence")
+
 # Define the id for the researcher
-id <- list$id[1]
+id <- "ixZuDk8AAAAJ"
 
 # Get his profile and print his name
 l <- get_profile(id)
 l$name 
+
+publication_list <-get_publications(id)
+cleaned_publication_list <- clean_publication_list(publication_list,id)
+
+file_name <- paste("Data-",l$name,".csv", sep = "")
+write.csv(cleaned_publication_list,file_name, row.names = FALSE)
 
 # Get his citation history, i.e. citations to his work in a given year 
 get_citation_history(id)
@@ -58,13 +67,30 @@ clean_publication_data(current_publication)
 resp <- get_scholar_resp("https://scholar.google.fr/citations?view_op=view_citation&hl=en&user=ulkW7fgAAAAJ&citation_for_view=ulkW7fgAAAAJ:u-x6o8ySG0sC")
 #resp <- get_scholar_resp("https://scholar.google.fr/citations?user=ulkW7fgAAAAJ&hl=en")
 
+co_authors <- c()
 
-current_publication <- publication_list[1,]
+list <- strsplit(cleaned_publication_list$author[3],", ")
+
+for (i in 1:length(list)){
+  print(class(elem))
+  print(paste("Author =",elem))
+  print((list[[i]]!=l$name))
+  if((list[[i]]!=l$name)){
+    co_authors <- append(co_authors,elem)
+  }
+  
+}
+co_authors
+unique_list <- table(co_authors)
+
+unique_list <- unique_list[!l$name]
 
 
-publication_list <-get_publications(id)
-publication_list <- clean_publication_list(publication_list,id)
+co_authors <- table(publication_list$author)
 
+get_full_list_coauthors <- function(){
+  
+}
 
 
 predict_h_index(id)
