@@ -23,12 +23,17 @@ clean_publication_list <- function(publication_list, author_id){
     return (NA);
   }
   
+  #First we need to curate the publication list to avoid errors when fetching more accurate information
+  publication_list <- curate_publication_list(publication_list)
+  
+  pb = txtProgressBar(min = 0, max = nrow(publication_list), initial = 0, style= 3)
   for (i in 1:nrow(publication_list)){
+    setTxtProgressBar(pb,i)
     current_publication <- publication_list[i,]
     publication_list[i,] <- clean_publication_data(current_publication,author_id)
     Sys.sleep(sleep_time)
   }
-  
+  close(pb)
   return (publication_list)
   
 }
@@ -91,15 +96,20 @@ curate_publication_list <- function(publication_list){
     return (NA);
   }
   index_of_publications_to_remove <- c()
-  pb = txtProgressBar(min = 0, max = length(publication_list), initial = 0)
+  pb = txtProgressBar(min = 0, max = nrow(publication_list), initial = 0, style= 3)
   for (i in 1:nrow(publication_list)){
     if(is.na(publication_list$year[i])){
       index_of_publications_to_remove <- c(index_of_publications_to_remove, i)
     }
     setTxtProgressBar(pb,i)
   }
+  close(pb)
+  if(is.null(index_of_publications_to_remove)){
+    print("All publications in the list for this scholar are considered valid, none removed")
+    return (publication_list)
+  }
   publication_list <- publication_list[-index_of_publications_to_remove,]
-  result_message <- paste("\n",length(index_of_publications_to_remove)," publications were removed from the list of publications",sep="")
+  result_message <- paste(length(index_of_publications_to_remove)," publications were removed from the list of publications",sep="")
   print(result_message)
   return (publication_list)
 }
