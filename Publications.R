@@ -66,7 +66,6 @@ clean_publication_data <- function(publication, author_id){
     errorMessage <- paste("The scholar page for this publication is empty\n The function tried to fetch the following page:\n'",pub_page,"'",sep="")
     stop(errorMessage)
   } 
-  print(pub_page)
   resp <- get_scholar_resp(pub_page)
   if (is.null(resp)){
     errorMessage <- paste("The scholar page for this publication is empty\n The function tried to fetch the following page:\n'",pub_page,"'",sep="")
@@ -181,7 +180,6 @@ find_venue_index<- function(fields){
   #"Publisher" should always be the last one of the list
   potential_venue_field <- c("Journal","Book","Source","Conference","Publisher")
   for (elem in potential_venue_field){
-    #print(elem)
     index <- find_field_index(elem,fields)
     if(index != -1){
       return (index)
