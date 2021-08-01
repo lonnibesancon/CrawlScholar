@@ -223,6 +223,7 @@ find_field_index<- function(field_to_find,fields){
 ##' Remove publications that are likely to have been wrongly added by Google Sholar
 ##' 
 ##' Current parameters to check that a publication is "valid" is the fact that it has a publication year
+##' TODO if the year is not given but the publication is cited, leave it in
 ##'
 ##' @param publication_list the list of publication from a scholar, must be non null
 ##'
