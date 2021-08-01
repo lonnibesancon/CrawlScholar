@@ -74,5 +74,34 @@ publication_list <- curate_publication_list(publication_list)
 publication_list
 
 
+resp <- get_scholar_resp("https://scholar.google.fr/citations?view_op=view_citation&hl=en&user=ulkW7fgAAAAJ&citation_for_view=ulkW7fgAAAAJ:d1gkVwhDpl0C")
+if (is.null(resp)){
+  errorMessage <- paste("The scholar page for this publication is empty\n The function tried to fetch the following page:\n'",pub_page,"'",sep="")
+  stop(errorMessage)
+} 
+resp_parsed <- read_html(resp)
+#We can access all article information from the divs with the class "gsc_oci_value"
+#Need to remember to add "." to the class or returns null results
+values <- html_nodes(resp_parsed,".gsc_oci_value")
+fields <- html_nodes(resp_parsed,".gsc_oci_field")
+
+
+Authors
+Publication date
+# If we can't find Journal, Book, Source, or Conference in the list of fields, then the venue is likely to be under "Publisher".
+# First we have to make sure that these other options are not found however, since if they are, publisher represents the real publisher. 
+Journal | Book | Source | Conference | Publisher
+Pages
+fields_list <- c("Authors","Publication date","Journal","Volume","Issue")
+
+fields <- html_text(fields)
+
+index <- find_field_index("Book",fields)
+
+publication$author <- html_text(values[1])
+publication$date <- html_text(values[2])
+publication$journal <- html_text(values[3])
+publication$number <- html_text(values[4])
+
 
 predict_h_index(id)

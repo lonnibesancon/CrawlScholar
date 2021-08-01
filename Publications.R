@@ -81,6 +81,33 @@ clean_publication_data <- function(publication, author_id){
   return(publication)
 }
 
+##' Look for a specific field within a publication details page on Google scholar
+##' 
+##' If the field is found, the function will return its index. -1 if not
+##'
+##' @param field_to_find the string of the field to look for, cannot be null
+##' @param fields the html_text() version of the HTML nodes of the fields in the publication information page
+##'
+##' @return the index if the field is found, -1 otherwise.
+find_field_index<- function(field_to_find,fields){
+  if(is.null(field_to_find) || is.na(field_to_find)){
+    error("Parameter 'field_to_find' must be set")
+    return (NA);
+  }
+  if(is.null(fields) || is.na(fields)){
+    error("Parameter 'fields' must be set")
+    return (NA);
+  }
+  
+  for (index in 1:length(fields)){
+    if(fields[index] == field_to_find){
+      return (index)
+    }
+  }
+  
+  return (-1)
+}
+
 
 ##' Remove publications that are likely to have been wrongly added by Google Sholar
 ##' 
