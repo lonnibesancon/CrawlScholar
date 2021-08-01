@@ -32,16 +32,10 @@ clean_publication_list <- function(publication_list, author_id){
     setTxtProgressBar(pb,i)
     current_publication <- publication_list[i,]
     current_publication <- clean_publication_data(current_publication,author_id)
-    print("PRINT CURRENT PUBLICATION START")
-    print(current_publication)
-    print("PRINT CURRENT PUBLICATION END")
     cleaned_list <- rbind(cleaned_list, current_publication)
     Sys.sleep(sleep_time)
   }
   close(pb)
-  print("CLEANED LIST START")
-  print(cleaned_list)
-  print("CLEANED LIST END")
   return (cleaned_list)
   
 }
@@ -136,10 +130,7 @@ clean_publication_data <- function(publication, author_id){
   citation_history <- fetch_publication_citation_history(resp_parsed)
   
   publication$citation_history <- citation_history
-  
-  print("PUBLICATION START")
-  print(publication)
-  print("PUBLICATION END")
+
   
   #publication$author <- html_text(values[1])
   #publication$date <- html_text(values[2])
