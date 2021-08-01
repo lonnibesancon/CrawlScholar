@@ -91,12 +91,15 @@ curate_publication_list <- function(publication_list){
     return (NA);
   }
   index_of_publications_to_remove <- c()
+  pb = txtProgressBar(min = 0, max = length(publication_list), initial = 0)
   for (i in 1:nrow(publication_list)){
     if(is.na(publication_list$year[i])){
       index_of_publications_to_remove <- c(index_of_publications_to_remove, i)
     }
+    setTxtProgressBar(pb,i)
   }
-  print(index_of_publications_to_remove)
   publication_list <- publication_list[-index_of_publications_to_remove,]
+  result_message <- paste("\n",length(index_of_publications_to_remove)," publications were removed from the list of publications",sep="")
+  print(result_message)
   return (publication_list)
 }
