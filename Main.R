@@ -5,6 +5,10 @@
 ################################################################
 
 
+debug <- 1
+sleep_time <- 1.5
+
+
 #Check that "likert" is installed
 if(!require(scholar)){
   install.packages("scholar")
@@ -14,7 +18,7 @@ if(!require(scholar)){
 #Documentation for the scholar package is here: https://cran.r-project.org/web/packages/scholar/scholar.pdf
 
 
-list <- read.csv("../data/list.csv")
+list <- read.csv("./list.csv")
 list$id <- c()
 
 length(list)
@@ -51,15 +55,11 @@ library(XML)
 resp <- get_scholar_resp("https://scholar.google.fr/citations?view_op=view_citation&hl=en&user=ulkW7fgAAAAJ&citation_for_view=ulkW7fgAAAAJ:u-x6o8ySG0sC")
 resp <- get_scholar_resp("https://scholar.google.fr/citations?user=ulkW7fgAAAAJ&hl=en")
 
-current_publication <- clean_publication_data(current_publication,id)
+current_publication <- clean_publication_data(current_publication, id)
 
 
 
 
-
-for(i in 1:nrow(list)){
-  
-}
 
 
 predict_h_index(id)

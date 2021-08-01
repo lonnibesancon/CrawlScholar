@@ -1,16 +1,15 @@
 ##' Gets accurate information about a researcher's complete list of publications
 ##'
-##' 
-##'
-##' This function can be called on a specific publication only
-##' Or can be used to clean a whole list of publications by the function 'clean_all_publications'
+##' The function uses an internal timer to avoid being banned from crawling google scholar
 ##'
 ##' @param author_id the id from the scholar, must be non null
 ##' @param publication_list the list of publication from a scholar
 ##'
 ##' @return the updated publication with more accurate information
 clean_publication_data <- function(publication, author_id){
-
+  
+  
+}
 
 
 ##' Gets accurate information about a specific publication
@@ -29,20 +28,30 @@ clean_publication_data <- function(publication, author_id){
 ##'
 ##' @return the updated publication with more accurate information
 clean_publication_data <- function(publication, author_id){
-  #function code starts here
   
-  page <- "https://scholar.google.com/citations?view_op=view_citation&hl=en"
+  
+  
+  pub_page <- "https://scholar.google.com/citations?view_op=view_citation&hl=en"
   citation_for_view_url <- paste("citation_for_view=",author_id,":",publication$pubid, sep="")
   author_id_url <- paste("user=",author_id, sep="")
-  page <- paste(page,author_id_url,citation_for_view_url, sep="&")
-  print(page)
+  pub_page <- paste(pub_page,author_id_url,citation_for_view_url, sep="&")
+  if (is.null(pub_page)){
+    errorMessage <- paste("The scholar page for this publication is empty\n The function tried to fetch the following page:\n'",pub_page,"'",se)
+    stop(errorMessage)
+  } 
+  print(pub_page)
   print("https://scholar.google.com/citations?view_op=view_citation&hl=en&user=ulkW7fgAAAAJ&citation_for_view=ulkW7fgAAAAJ:u-x6o8ySG0sC")
-  pub_page <- get_scholar_resp(page)
-  pub_page <- read_html(pub_page)
+  resp <- get_scholar_resp(pub_page)
+  print(resp)
+  if (is.null(resp)){
+    errorMessage <- paste("The scholar page for this publication is invalid.\n The function tried to fetch the following page:\n'",pub_page,"'",se)
+    stop(errorMessage)
+  } 
+  resp <- read_html(resp)
   
   #We can access all article information from the divs with the class "gsc_oci_value"
   #Need to remember to add "." to the class or returns null results
-  values <- html_nodes(resp,".gsc_oci_value")
+  values <- html_nodes(pub_page,".gsc_oci_value")
   publication$author <- html_text(values[1])
   publication$date <- html_text(values[2])
   publication$journal <- html_text(values[3])
