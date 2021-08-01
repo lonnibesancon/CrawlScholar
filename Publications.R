@@ -1,13 +1,28 @@
 ##' Gets accurate information about a researcher's complete list of publications
-##'
+##' 
+##' Crawls through the list of publications of a scholar to get more accurate informations
 ##' The function uses an internal timer to avoid being banned from crawling google scholar
 ##'
 ##' @param author_id the id from the scholar, must be non null
-##' @param publication_list the list of publication from a scholar
+##' @param publication_list the list of publication from a scholar (optional)
 ##'
-##' @return the updated publication with more accurate information
-clean_publication_data <- function(publication, author_id){
+##' @return publication_list the updated publication list with more accurate information
+clean_publication_list <- function(publication_list, author_id){
+  if(missing(author_id)) {
+    error("Parameter 'author_id' should be set")
+  }
+  if(missing(publication_list)){
+    warning("'publication_list' was not set, the function automatically fetched the publications from the scholar based on 'author_id'")
+    publication_list <-get_publications(author_id)
+  }
   
+  for (i in 1:nrow(publication_list)){
+    current_publication <- publication_list[i,]
+    publication_list[i,] <- clean_publication_data(current_publication,author_id)
+    Sys.sleep(sleep_time)
+  }
+  
+  return (publication_list)
   
 }
 
@@ -29,14 +44,12 @@ clean_publication_data <- function(publication, author_id){
 ##' @return the updated publication with more accurate information
 clean_publication_data <- function(publication, author_id){
   
-  
-  
   pub_page <- "https://scholar.google.com/citations?view_op=view_citation&hl=en"
   citation_for_view_url <- paste("citation_for_view=",author_id,":",publication$pubid, sep="")
   author_id_url <- paste("user=",author_id, sep="")
   pub_page <- paste(pub_page,author_id_url,citation_for_view_url, sep="&")
   if (is.null(pub_page)){
-    errorMessage <- paste("The scholar page for this publication is empty\n The function tried to fetch the following page:\n'",pub_page,"'",se)
+    errorMessage <- paste("The scholar page for this publication is empty\n The function tried to fetch the following page:\n'",pub_page,"'",sep="")
     stop(errorMessage)
   } 
   print(pub_page)
@@ -44,7 +57,7 @@ clean_publication_data <- function(publication, author_id){
   resp <- get_scholar_resp(pub_page)
   print(resp)
   if (is.null(resp)){
-    errorMessage <- paste("The scholar page for this publication is invalid.\n The function tried to fetch the following page:\n'",pub_page,"'",se)
+    errorMessage <- paste("The scholar page for this publication is empty\n The function tried to fetch the following page:\n'",pub_page,"'",sep="")
     stop(errorMessage)
   } 
   resp <- read_html(resp)
