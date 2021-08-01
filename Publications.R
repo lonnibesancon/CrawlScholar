@@ -1,6 +1,8 @@
 ##' Gets accurate information about a researcher's complete list of publications
 ##' 
-##' Crawls through the list of publications of a scholar to get more accurate informations
+##' Crawls through the list of publications of a scholar to get more accurate information
+##' All publications without a publication_year will be removed from the list of publications
+##' to ensure that we only preserve what should really be considered a publication
 ##' The function uses an internal timer to avoid being banned from crawling google scholar
 ##'
 ##' @param author_id the id from the scholar, must be non null
@@ -15,6 +17,10 @@ clean_publication_list <- function(publication_list, author_id){
   if(missing(publication_list)){
     warning("'publication_list' was not set, the function automatically fetched the publications from the scholar based on 'author_id'")
     publication_list <-get_publications(author_id)
+  }
+  if(is.null(publication_list)){
+    warning("List of publications is for this scholar")
+    return (NA);
   }
   
   for (i in 1:nrow(publication_list)){
@@ -68,4 +74,29 @@ clean_publication_data <- function(publication, author_id){
   publication$journal <- html_text(values[3])
   publication$number <- html_text(values[4])
   return(publication)
+}
+
+
+##' Remove publications that are likely to have been wrongly added by Google Sholar
+##' 
+##' Current parameters to check that a publication is "valid" is the fact that it has a publication year
+##'
+##' @param publication_list the list of publication from a scholar, must be non null
+##'
+##' @return publication_list the updated publication list with more accurate information
+curate_publication_list <- function(publication_list){
+  #if the scholar has no publications we return
+  if(is.null(publication_list) || is.na(publication_list)){
+    warning("List of publications is empty")
+    return (NA);
+  }
+  index_of_publications_to_remove <- c()
+  for (i in 1:nrow(publication_list)){
+    if(is.na(publication_list$year[i])){
+      index_of_publications_to_remove <- c(index_of_publications_to_remove, i)
+    }
+  }
+  print(index_of_publications_to_remove)
+  publication_list <- publication_list[-index_of_publications_to_remove,]
+  return (publication_list)
 }

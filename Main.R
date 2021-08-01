@@ -67,8 +67,11 @@ clean_publication_data(publication_list[1,],id)
 
 current_publication <- clean_publication_data(current_publication, id)
 
+current_publication <- publication_list[48,]
 
-
+publication_list <-get_publications(id)
+publication_list <- curate_publication_list(publication_list)
+publication_list
 
 
 
