@@ -88,26 +88,41 @@ clean_publication_data <- function(publication, author_id){
   if(index!=-1){
     publication$author <- html_text(values[index]) 
   }
+  else{
+    publication$author <- NA
+  }
   
   index <- find_field_index("Pages",fields)
   if(index!=-1){
     publication$number <- html_text(values[index])
+  }
+  else{
+    publication$number <- NA
   }
   
   index <- find_field_index("Publication date",fields)
   if(index!=-1){
     publication$date <- html_text(values[index])
   }
+  else{
+    publication$date <- NA
+  }
   
   index <- find_field_index("Description",fields)
   if(index!=-1){
     publication$description <- html_text(values[index])
+  }
+  else{
+    publication$description <- NA
   }
   
   #TODO journal is really not an ideal column name since it's the publication venue and it does not have to be a journal
   index <- find_venue_index(fields)
   if(index!=-1){
     publication$journal <- html_text(values[index])
+  }
+  else{
+    publication$journal <- NA
   }
   
   
@@ -133,7 +148,7 @@ find_venue_index<- function(fields){
   #"Publisher" should always be the last one of the list
   potential_venue_field <- c("Journal","Book","Source","Conference","Publisher")
   for (elem in potential_venue_field){
-    print(elem)
+    #print(elem)
     index <- find_field_index(elem,fields)
     if(index != -1){
       return (index)
@@ -162,8 +177,9 @@ find_field_index<- function(field_to_find,fields){
   }
   
   for (index in 1:length(fields)){
-    mess <- paste("fields[index] = ",fields[index]," field_to_find = ",field_to_find,"fields[index] == field_to_find = ",(fields[index] == field_to_find))
-    print(mess)
+    #(Un)comment lines below for debugging
+    #mess <- paste("fields[index] = ",fields[index]," field_to_find = ",field_to_find,"fields[index] == field_to_find = ",(fields[index] == field_to_find))
+    #print(mess)
     if(fields[index] == field_to_find){
       return (index)
     }
