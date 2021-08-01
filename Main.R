@@ -74,7 +74,7 @@ publication_list <- curate_publication_list(publication_list)
 publication_list
 
 
-resp <- get_scholar_resp("https://scholar.google.fr/citations?view_op=view_citation&hl=en&user=ulkW7fgAAAAJ&citation_for_view=ulkW7fgAAAAJ:d1gkVwhDpl0C")
+resp <- get_scholar_resp("https://scholar.google.fr/citations?view_op=view_citation&hl=en&user=ulkW7fgAAAAJ&sortby=pubdate&citation_for_view=ulkW7fgAAAAJ:5awf1xo2G04C")
 if (is.null(resp)){
   errorMessage <- paste("The scholar page for this publication is empty\n The function tried to fetch the following page:\n'",pub_page,"'",sep="")
   stop(errorMessage)
@@ -84,14 +84,11 @@ resp_parsed <- read_html(resp)
 #Need to remember to add "." to the class or returns null results
 values <- html_nodes(resp_parsed,".gsc_oci_value")
 fields <- html_nodes(resp_parsed,".gsc_oci_field")
+fields <- html_text(fields)
+
+index <- find_venue_index(fields)
 
 
-Authors
-Publication date
-# If we can't find Journal, Book, Source, or Conference in the list of fields, then the venue is likely to be under "Publisher".
-# First we have to make sure that these other options are not found however, since if they are, publisher represents the real publisher. 
-Journal | Book | Source | Conference | Publisher
-Pages
 fields_list <- c("Authors","Publication date","Journal","Volume","Issue")
 
 fields <- html_text(fields)

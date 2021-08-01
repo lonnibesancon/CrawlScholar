@@ -74,11 +74,73 @@ clean_publication_data <- function(publication, author_id){
   #We can access all article information from the divs with the class "gsc_oci_value"
   #Need to remember to add "." to the class or returns null results
   values <- html_nodes(resp_parsed,".gsc_oci_value")
-  publication$author <- html_text(values[1])
-  publication$date <- html_text(values[2])
-  publication$journal <- html_text(values[3])
-  publication$number <- html_text(values[4])
+  fields <- html_nodes(resp_parsed,".gsc_oci_field")
+  fields <- html_text(fields)
+  
+  #Publication venue a particular case and there is already a function to handle this case that we call
+  
+  #We could put this whole thing in a loop if the package on CRAN adapts to a better naming of columns
+  #As of now we leave as it is
+  #Something with a list like this for instance that we just go through items_to_update <- c("Authors","Pages","Publication date","Description")
+  #TODO check with CRAN package author
+  
+  index <- find_field_index("Authors",fields)
+  if(index!=-1){
+    publication$author <- html_text(values[index]) 
+  }
+  
+  index <- find_field_index("Pages",fields)
+  if(index!=-1){
+    publication$number <- html_text(values[index])
+  }
+  
+  index <- find_field_index("Publication date",fields)
+  if(index!=-1){
+    publication$date <- html_text(values[index])
+  }
+  
+  index <- find_field_index("Description",fields)
+  if(index!=-1){
+    publication$description <- html_text(values[index])
+  }
+  
+  #TODO journal is really not an ideal column name since it's the publication venue and it does not have to be a journal
+  index <- find_venue_index(fields)
+  if(index!=-1){
+    publication$journal <- html_text(values[index])
+  }
+  
+  
+  #publication$author <- html_text(values[1])
+  #publication$date <- html_text(values[2])
+  #publication$journal <- html_text(values[3])
+  #publication$number <- html_text(values[4])
   return(publication)
+}
+
+##' Look for the information of the publication venue within a publication details page on Google scholar
+##' 
+##' The case of the venue is quite peculiar and error-prone as depending on the publication type (and the accuracy of the record)
+##' there are many different fields that could represent the publication venue
+##' So far, the following have been found to contain the publication venue "Journal | Book | Source | Conference | Publisher"
+##' The case of "Publisher" seems to be the last resort for some preprints. It can only be used if none of the other fields are found
+##'
+##' @param fields the html_text() version of the HTML nodes of the fields in the publication information page
+##'
+##' @return the index of the venue field, if found, -1 otherwise
+find_venue_index<- function(fields){
+  #First we create a list of all possible fields
+  #"Publisher" should always be the last one of the list
+  potential_venue_field <- c("Journal","Book","Source","Conference","Publisher")
+  for (elem in potential_venue_field){
+    print(elem)
+    index <- find_field_index(elem,fields)
+    if(index != -1){
+      return (index)
+    }
+  }
+  
+  return (-1)
 }
 
 ##' Look for a specific field within a publication details page on Google scholar
@@ -100,6 +162,8 @@ find_field_index<- function(field_to_find,fields){
   }
   
   for (index in 1:length(fields)){
+    mess <- paste("fields[index] = ",fields[index]," field_to_find = ",field_to_find,"fields[index] == field_to_find = ",(fields[index] == field_to_find))
+    print(mess)
     if(fields[index] == field_to_find){
       return (index)
     }
