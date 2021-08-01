@@ -6,7 +6,6 @@
 
 
 debug <- 1
-sleep_time <- 1.5
 
 
 #Check that "likert" is installed
@@ -59,6 +58,8 @@ library(XML)
 resp <- get_scholar_resp("https://scholar.google.fr/citations?view_op=view_citation&hl=en&user=ulkW7fgAAAAJ&citation_for_view=ulkW7fgAAAAJ:u-x6o8ySG0sC")
 resp <- get_scholar_resp("https://scholar.google.fr/citations?user=ulkW7fgAAAAJ&hl=en")
 
+
+current_publication <- publication_list[1,]
 
 publication_list <- clean_publication_list(publication_list,id)
 

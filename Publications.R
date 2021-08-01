@@ -8,6 +8,7 @@
 ##'
 ##' @return publication_list the updated publication list with more accurate information
 clean_publication_list <- function(publication_list, author_id){
+  sleep_time <- 1.5
   if(missing(author_id)) {
     error("Parameter 'author_id' should be set")
   }
@@ -53,18 +54,15 @@ clean_publication_data <- function(publication, author_id){
     stop(errorMessage)
   } 
   print(pub_page)
-  print("https://scholar.google.com/citations?view_op=view_citation&hl=en&user=ulkW7fgAAAAJ&citation_for_view=ulkW7fgAAAAJ:u-x6o8ySG0sC")
   resp <- get_scholar_resp(pub_page)
-  print(resp)
   if (is.null(resp)){
     errorMessage <- paste("The scholar page for this publication is empty\n The function tried to fetch the following page:\n'",pub_page,"'",sep="")
     stop(errorMessage)
   } 
-  resp <- read_html(resp)
-  
+  resp_parsed <- read_html(resp)
   #We can access all article information from the divs with the class "gsc_oci_value"
   #Need to remember to add "." to the class or returns null results
-  values <- html_nodes(pub_page,".gsc_oci_value")
+  values <- html_nodes(resp_parsed,".gsc_oci_value")
   publication$author <- html_text(values[1])
   publication$date <- html_text(values[2])
   publication$journal <- html_text(values[3])
