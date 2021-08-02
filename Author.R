@@ -15,10 +15,9 @@ get_coauthors <- function(publication_list, author_id){
   for (elem in publication_list$author){
     list <- strsplit(elem,", ")
     list <- list[[1]]
-    print(list)
     for (author in list){
       if(author!=scholar$name){
-        co_authors <- append(author,elem)
+        co_authors <- append(co_authors,author)
       }
     }
   }
