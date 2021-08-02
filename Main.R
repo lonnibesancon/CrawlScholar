@@ -22,6 +22,7 @@ library(XML)
 
 #Documentation for the scholar package is here: https://cran.r-project.org/web/packages/scholar/scholar.pdf
 
+co_authors <- get_coauthors(cleaned_publication_list,id)
 
 list <- read.csv("./list.csv")
 list$id <- c()
@@ -38,7 +39,7 @@ for(i in 1:nrow(list)){
 id <- get_scholar_id(last_name = "Leyrat", first_name = "Clemence")
 
 # Define the id for the researcher
-id <- "ixZuDk8AAAAJ"
+id <- "oTHPKOoAAAAJ"
 
 # Get his profile and print his name
 l <- get_profile(id)
@@ -70,16 +71,18 @@ resp <- get_scholar_resp("https://scholar.google.fr/citations?view_op=view_citat
 co_authors <- c()
 
 list <- strsplit(cleaned_publication_list$author[3],", ")
+list <- strsplit(cleaned_publication_list$author[4],", ")
+list <- list[[1]]
 
-for (i in 1:length(list)){
-  print(class(elem))
-  print(paste("Author =",elem))
-  print((list[[i]]!=l$name))
-  if((list[[i]]!=l$name)){
+for (elem in list){
+  if(elem!=l$name){
     co_authors <- append(co_authors,elem)
   }
   
 }
+
+get_coauthors()
+
 co_authors
 unique_list <- table(co_authors)
 
