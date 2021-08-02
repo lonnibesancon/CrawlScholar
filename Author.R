@@ -26,3 +26,37 @@ get_coauthors <- function(publication_list, author_id){
   return(unique_list)
   
 }
+
+
+get_profile <- function(id) {
+  site <- "http://scholar.google.com/citations?user="
+  url_template <- paste0(site, "/citations?hl=en&user=%s")
+  url <- compose_url(id, url_template)
+  
+  ## Generate a list of all the tables identified by the scholar ID
+  page <- get_scholar_resp(url) %>% read_html()
+  tables <- page %>% html_table()
+  
+  ## The citation stats are in tables[[1]]$tables$stats
+  ## but the number of rows seems to vary by OS
+  stats <- tables[[1]]
+  rows <- nrow(stats)
+  
+  ## The personal info is in
+  name <- page %>% html_nodes(xpath="//*/div[@id='gsc_prf_in']") %>% html_text()
+  bio_info <- page %>% html_nodes(xpath="//*/div[@class='gsc_prf_il']") %>% html_text()
+  interests <- page %>% html_nodes(xpath="//*/div[@id='gsc_prf_int']") %>% html_children() %>% html_text()
+  affiliation <- bio_info[1]
+  
+  ## Specialities (trim out HTML non-breaking space)
+  specs <- iconv(bio_info[2], from="UTF8", to="ASCII")
+  specs <- str_trim(tolower(str_split(specs, ",")[[1]]))
+  
+  
+  return(list(id=id, name=name, affiliation=affiliation,
+              total_cites=as.numeric(as.character(stats[rows-2,2])),
+              h_index=as.numeric(as.character(stats[rows-1,2])),
+              i10_index=as.numeric(as.character(stats[rows,2])),
+              fields=specs,
+              interests=interests,))
+}

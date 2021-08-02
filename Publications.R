@@ -15,7 +15,7 @@ clean_publication_list <- function(publication_list, author_id){
   #This will be passed to the clean_publication_data() function
   scholar_profile <- get_profile(author_id)
   
-  sleep_time <- x1 <- runif(1, 1.1, 3.9)
+  sleep_time <- x1 <- runif(1, 1.1, 7.9)
   if(missing(author_id)) {
     error("Parameter 'author_id' should be set")
   }

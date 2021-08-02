@@ -48,6 +48,9 @@ scholar_name <- scholar$name
 publication_list <- get_publications(id)
 cleaned_publication_list <- clean_publication_list(publication_list,id)
 
+file_name <- paste("Data-",scholar_name,".csv",sep="")
+write.csv(cleaned_publication_list,file_name)
+
 current_publication <- cleaned_publication_list[18,]
 
 authors <- strsplit(current_publication$author,", ")
