@@ -10,6 +10,11 @@
 ##'
 ##' @return publication_list the updated publication list with more accurate information
 clean_publication_list <- function(publication_list, author_id){
+  #First we will need the name of the author for the rest of the processing 
+  #Namely to find author's position in the paper
+  #This will be passed to the clean_publication_data() function
+  scholar_profile <- get_profile(author_id)
+  
   sleep_time <- x1 <- runif(1, 1.1, 3.9)
   if(missing(author_id)) {
     error("Parameter 'author_id' should be set")
@@ -31,7 +36,7 @@ clean_publication_list <- function(publication_list, author_id){
   for (i in 1:nrow(publication_list)){
     setTxtProgressBar(pb,i)
     current_publication <- publication_list[i,]
-    current_publication <- clean_publication_data(current_publication,author_id)
+    current_publication <- clean_publication_data(current_publication,author_id,scholar_profile$name)
     cleaned_list <- rbind(cleaned_list, current_publication)
     Sys.sleep(sleep_time)
   }
@@ -54,9 +59,10 @@ clean_publication_list <- function(publication_list, author_id){
 ##'
 ##' @param publication a publication as obtained from a scholar's publication list, must be non null
 ##' @param author_id the id of the scholar, must be non null
+##' @param author_name the name of the scholar that we are interested in (optional). It is used to derive their position in the author list
 ##'
 ##' @return the updated publication with more accurate information
-clean_publication_data <- function(publication, author_id){
+clean_publication_data <- function(publication, author_id, scholar_name){
   
   pub_page <- "https://scholar.google.com/citations?view_op=view_citation&hl=en"
   citation_for_view_url <- paste("citation_for_view=",author_id,":",publication$pubid, sep="")
@@ -126,6 +132,23 @@ clean_publication_data <- function(publication, author_id){
     publication$journal <- NA
   }
   
+  
+  #Now we want to add author position and total number of authors
+  authors <- strsplit(publication$author,", ")
+  authors <- authors[[1]]
+  publication$nb_authors <- length(authors)
+  
+  #We add author position for the scholar that we are interested in
+  #There might special characters automatically left out in the publication metadata
+  #So we look for ASCII equivalences
+  for (i in  1:length(authors)){
+    authors[i] <- iconv(authors[i], to='ASCII//TRANSLIT')
+  }
+  scholar_name <- iconv(scholar_name, to='ASCII//TRANSLIT')
+  position <- match(scholar_name,authors)
+  publication$position <- position
+  
+  #Finally we get the citation history of the publication
   citation_history <- fetch_publication_citation_history(resp_parsed)
   
   publication$citation_history <- citation_history
