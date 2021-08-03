@@ -15,16 +15,16 @@ get_ascii_string <- function(string){
 ###' Composes a google scholar URL based on an ID
 ###' 
 ###'
-###' @param id a valid google scholar ID of a scholar profile
+###' @param scholar_id a valid google scholar ID of a scholar profile
 ###' @param start_index the index from which to start showing publications after they have been ordered
 ###' @nb_publications the number of publications to display on the page
 ###' @return the composed URL
 ###' @author Lonni Besançon
-compose_scholar_url <- function(id, start_index = 0, nb_publications= 100){
+compose_scholar_url <- function(scholar_id, start_index = 0, nb_publications= 100){
   site <- "http://scholar.google.com/citations?user="
   arguments <- paste("&cstart=",start_index,"&pagesize=",nb_publications, sep="")
-  print(paste(site,id,arguments,sep=""))
-  return (paste(site,id,arguments,sep=""))
+  print(paste(site,scholar_id,arguments,sep=""))
+  return (paste(site,scholar_id,arguments,sep=""))
 }
 
 ###' Composes a google scholar URL for a publication based on an ID

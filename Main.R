@@ -43,7 +43,7 @@ id <- "ulkW7fgAAAAJ"
 id <- "PMZ3h7sAAAAJ" #JDF to check for max number of papers
 
 # Get his profile and print his name
-scholar <- get_profile(id)
+scholar <- get_scholar_profile(id)
 scholar_name <- scholar$name 
 
 publication_list <- get_publications(id)

@@ -5,27 +5,27 @@
 ###' to ensure that we only preserve what should really be considered a publication
 ###' The function uses an internal timer to avoid being banned from crawling google scholar
 ###'
-###' @param author_id the id from the scholar, must be non null
+###' @param scholoar_id the id from the scholar, must be non null
 ###' @param publication_list the list of publication from a scholar (optional)
 ###'
 ###' @return publication_list the updated publication list with more accurate information
-clean_publication_list <- function(author_id, publication_list){
+clean_publication_list <- function(scholoar_id, publication_list){
   
-  if(missing(author_id)) {
-    error("Parameter 'author_id' should be set")
+  if(missing(scholoar_id)) {
+    error("Parameter 'scholoar_id' should be set")
   }
   
   
   #First we will need the name of the author for the rest of the processing 
   #Namely to find author's position in the paper
   #This will be passed to the clean_publication_data() function
-  scholar_profile <- get_profile(author_id)
+  scholar_profile <- get_scholar_profile(scholoar_id)
   
   
   
   if(missing(publication_list)){
-    warning("'publication_list' was not set, the function automatically fetched the publications from the scholar based on 'author_id'")
-    publication_list<-get_initial_publication_list(author_id, flush_cache = TRUE)
+    warning("'publication_list' was not set, the function automatically fetched the publications from the scholar based on 'scholoar_id'")
+    publication_list<-get_initial_publication_list(scholoar_id, flush_cache = TRUE)
   }
   if(is.null(publication_list)){
     warning("List of publications is for this scholar")
@@ -40,7 +40,7 @@ clean_publication_list <- function(author_id, publication_list){
   for (i in 1:nrow(publication_list)){
     setTxtProgressBar(pb,i)
     current_publication <- publication_list[i,]
-    current_publication <- clean_publication_data(current_publication,author_id,scholar_profile$name)
+    current_publication <- clean_publication_data(current_publication,scholoar_id,scholar_profile$name)
     cleaned_list <- rbind(cleaned_list, current_publication)
   }
   close(pb)
@@ -61,17 +61,17 @@ clean_publication_list <- function(author_id, publication_list){
 ###' Or can be used to clean a whole list of publications by the function 'clean_all_publications'
 ###'
 ###' @param publication a publication as obtained from a scholar's publication list, must be non null
-###' @param author_id the id of the scholar, must be non null
+###' @param scholoar_id the id of the scholar, must be non null
 ###' @param author_name the name of the scholar that we are interested in (optional). It is used to derive their position in the author list
 ###'
 ###' @return the updated publication with more accurate information
-clean_publication_data <- function(publication, author_id, scholar_name){
+clean_publication_data <- function(publication, scholoar_id, scholar_name){
   
   #pub_page <- "https://scholar.google.com/citations?view_op=view_citation&hl=en"
-  #citation_for_view_url <- paste("citation_for_view=",author_id,":",publication$pubid, sep="")
-  #author_id_url <- paste("user=",author_id, sep="")
-  #pub_page <- paste(pub_page,author_id_url,citation_for_view_url, sep="&")
-  pub_page <- compose_publication_url(author_id, publication$publication_id)
+  #citation_for_view_url <- paste("citation_for_view=",scholoar_id,":",publication$pubid, sep="")
+  #scholoar_id_url <- paste("user=",scholoar_id, sep="")
+  #pub_page <- paste(pub_page,scholoar_id_url,citation_for_view_url, sep="&")
+  pub_page <- compose_publication_url(scholoar_id, publication$publication_id)
   if (is.null(pub_page)){
     errorMessage <- paste("The scholar page for this publication is empty\n The function tried to fetch the following page:\n'",pub_page,"'",sep="")
     stop(errorMessage)

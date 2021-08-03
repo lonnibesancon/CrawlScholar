@@ -4,11 +4,12 @@
 ###' It will produce a better output if 'clean_publication_list()' has been called to produce it
 ###'
 ###' @param publication_list the list of publications 
-###' @param author_id the id from the scholar, must be non null
+###' @param scholar_id the id from the scholar, must be non null
 ###'
 ###' @return a table of all co-authors and how many publications they participated on (name and occurences)
-get_coauthors <- function(publication_list, author_id){
-  scholar <- get_profile(id)
+###' @author Lonni Besançon
+get_coauthors <- function(publication_list, scholar_id){
+  scholar <- get_profile(scholar_id)
   scholar$name 
   
   co_authors <- c()
@@ -34,13 +35,14 @@ get_coauthors <- function(publication_list, author_id){
 ###' Namely, the function returns, the scholar's name, affiliation, position and citation history (from the graph on the right of a google scholar page)
 ###'
 ###' @param publication_list the list of publications 
-###' @param author_id the id from the scholar, must be non null
+###' @param scholar_id the id from the scholar, must be non null
 ###'
 ###' @return a table of all co-authors and how many publications they participated on (name and occurences)
 ###' @importFrom xml2 read_html
 ###' @importFrom rvest html_table html_nodes html_text
-get_scholar_profile <- function(id) {
-  url <- compose_scholar_url(id)
+###' @author Lonni Besançon
+get_scholar_profile <- function(scholar_id) {
+  url <- compose_scholar_url(scholar_id)
   page <- get_scholar_page(url) 
   html_page <- read_html(page)
   tables <- html_table(html_page)
