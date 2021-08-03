@@ -95,7 +95,7 @@ s1b
 
 latin=iconv(s1,'utf8','latin1')
 
-s1 <- iconv(s1, to='ASCII//TRANSLIT', sub='/')
+s1 <- iconv(s1, to='ASCII//TRANSLIT', sub='')
 s2 <- iconv(s2, to='ASCII//TRANSLIT')
 s3 <- iconv(s3, to='ASCII//TRANSLIT')
 s4 <- iconv(s4, to='ASCII//TRANSLIT')
@@ -111,10 +111,7 @@ s2 <- iconv(s2, to='ASCII//TRANSLIT')
 s3 <- iconv(s3, to='ASCII//TRANSLIT')
 s4 <- iconv(s4, to='ASCII//TRANSLIT')
 
-s1
-s2
-s3
-s4
+utf_16<-iconv(s1,'utf8','utf-16')
 
 
 position <- match(scholar_name,authors)

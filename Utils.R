@@ -7,8 +7,7 @@
 ###'
 ###' @return converted: the converted string
 get_ascii_string <- function(string){
-  latin=iconv(string,'utf8','latin1')
-  converted <- iconv(latin,'latin1','ascii//translit')
+  converted <- iconv(string, to='ASCII//TRANSLIT', sub='')
   return (converted)
 }
 
