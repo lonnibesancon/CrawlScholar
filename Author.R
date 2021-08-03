@@ -28,7 +28,17 @@ get_coauthors <- function(publication_list, author_id){
 }
 
 
-
+###' Gets profile information for a scholar
+###' 
+###' GGiven a specific valid google scholar ID, this function returns basic information about the scholar
+###' Namely, the function returns, the scholar's name, affiliation, position and citation history (from the graph on the right of a google scholar page)
+###'
+###' @param publication_list the list of publications 
+###' @param author_id the id from the scholar, must be non null
+###'
+###' @return a table of all co-authors and how many publications they participated on (name and occurences)
+###' @importFrom xml2 read_html
+###' @importFrom rvest html_table html_nodes html_text
 get_scholar_profile <- function(id) {
   url <- compose_scholar_url(id)
   page <- get_scholar_page(url) 

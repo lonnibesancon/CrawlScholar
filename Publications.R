@@ -275,3 +275,92 @@ curate_publication_list <- function(publication_list){
   print(result_message)
   return (publication_list)
 }
+
+
+
+
+##' Gets the publications for a scholar
+##'
+##' Gets the publications of a specified scholar.
+##' The function only fetches basic information such as title, year and number of citations.
+##' All the other informations presented on this page are not accurate enough
+##' Another function will fetch more accurate information
+##' The function recursively calls itself if the number of publications from the scholar is greater than 100
+##' In this case we recursively call the function on the next 100 until we are done crawling through all publications
+##'
+##' @param id a string containing a valid Google Scholar ID.  
+##' @param flush_cache should the cache be flushed? 
+##' @param start_index the first publication to load
+##' 
+##' @return a data frame listing the publications and their details.
+##' These include the publication title, author, journal, number,
+##' cites, year, and the publication ID. By default, the list is sorted by citation.
+##' @importFrom stringr str_extract str_sub str_trim str_replace
+##' @importFrom xml2 read_html
+##' @importFrom rvest html_nodes html_text html_attr
+##' @import R.cache
+##' @export
+get_publications <- function(scholar_id, flush_cache=FALSE, start_index = 0) {
+  nb_publications <- 100 #The maximum number of publications we can have on a given scholar page
+  sortby <-"citation"
+
+  ## Define the cache path
+  cache.dir <- file.path(tempdir(), "r-scholar")
+  setCacheRootPath(cache.dir)
+  
+  ## Clear the cache if requested
+  if (flush_cache) saveCache(NULL, list(scholar_id,start_index))
+  
+  ## Check if we've cached it already
+  publication_list <- loadCache(list(scholar_id,start_index))
+  
+  ## If not, get the data and save it to cache
+  if (is.null(publication_list)) {
+    
+    url <- compose_scholar_url(id,start_index=start_index)
+    page_html <- read_html(get_scholar_page(url))
+    publications <- html_nodes(page_html,".gsc_a_at")
+    
+    
+    #To recover the publication ID we extract it from the link in the page
+    links <- html_attr(publications,"href")
+    
+    #The publication_id is located in the URL after "citation_for_view"
+    for(i in 1:length(links)){
+      publication_ids[i] <- strsplit(links[i],"for_view=")[[1]][2]
+      #The complete publication_id also contains the scholar_id
+      #It is needed to construct a valid URL, but we still want to separate these two
+      #They are separated by ":"
+      publication_ids[i] <- strsplit(publication_ids[i],":")[[1]][2]
+    }
+    
+    publication_ids <- strsplit(publication_ids,":")[[1]][2]
+    
+    #Total citation information is located in a class="gsc_a_ac gs_ibl"
+    citations <- html_text(html_nodes(page_html,".gsc_a_ac.gs_ibl"))
+    #Year of publication is located in  a class="gsc_a_h gsc_a_hc gs_ibl"
+    years <- html_text(html_nodes(page_html,".gsc_a_h.gsc_a_hc.gs_ibl"))
+    #Title information is located in a class="gsc_a_at"
+    titles <- html_text(html_nodes(page_html,".gsc_a_at"))
+    
+    publication_list <- data.frame(year=years,title=titles,citation=citations,publication_id=publication_ids)
+    
+    button <- html_nodes(page_html,"#gsc_bpf_more")
+    as.character(button)
+    
+    #If the "show more" button is disabled, we don't have any more publications to parse
+    is_button_disabled <- grepl("disabled", as.character(button), fixed = TRUE)
+    if(!is_button_disabled){
+      publication_list <-  rbind(publication_list,get_publications(scholar_id,start_index=start_index+nb_publications))
+    }
+    
+    # Now a final check to see if we are at the initial call of this function
+    # If we are then we can save the results in the cache
+    
+    if (start_index == 0) {
+      saveCache(data, key=list(id, start_index))
+    }
+  }
+  
+  return(publication_list)
+}
