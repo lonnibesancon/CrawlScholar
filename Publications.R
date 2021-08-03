@@ -9,19 +9,23 @@
 ###' @param publication_list the list of publication from a scholar (optional)
 ###'
 ###' @return publication_list the updated publication list with more accurate information
-clean_publication_list <- function(publication_list, author_id){
+clean_publication_list <- function(author_id, publication_list){
+  
+  if(missing(author_id)) {
+    error("Parameter 'author_id' should be set")
+  }
+  
+  
   #First we will need the name of the author for the rest of the processing 
   #Namely to find author's position in the paper
   #This will be passed to the clean_publication_data() function
   scholar_profile <- get_profile(author_id)
   
   
-  if(missing(author_id)) {
-    error("Parameter 'author_id' should be set")
-  }
+  
   if(missing(publication_list)){
     warning("'publication_list' was not set, the function automatically fetched the publications from the scholar based on 'author_id'")
-    publication_list <-get_publications(author_id)
+    publication_list<-get_initial_publication_list(author_id, flush_cache = TRUE)
   }
   if(is.null(publication_list)){
     warning("List of publications is for this scholar")
@@ -67,7 +71,7 @@ clean_publication_data <- function(publication, author_id, scholar_name){
   #citation_for_view_url <- paste("citation_for_view=",author_id,":",publication$pubid, sep="")
   #author_id_url <- paste("user=",author_id, sep="")
   #pub_page <- paste(pub_page,author_id_url,citation_for_view_url, sep="&")
-  pub_page <- compose_publication_url(author_id, publication$pubid)
+  pub_page <- compose_publication_url(author_id, publication$publication_id)
   if (is.null(pub_page)){
     errorMessage <- paste("The scholar page for this publication is empty\n The function tried to fetch the following page:\n'",pub_page,"'",sep="")
     stop(errorMessage)
@@ -123,13 +127,12 @@ clean_publication_data <- function(publication, author_id, scholar_name){
     publication$description <- NA
   }
   
-  #TODO journal is really not an ideal column name since it's the publication venue and it does not have to be a journal
   index <- find_venue_index(fields)
   if(index!=-1){
-    publication$journal <- html_text(values[index])
+    publication$venue <- html_text(values[index])
   }
   else{
-    publication$journal <- NA
+    publication$venue <- NA
   }
   
   
@@ -298,7 +301,10 @@ curate_publication_list <- function(publication_list){
 ##' @importFrom rvest html_nodes html_text html_attr
 ##' @import R.cache
 ##' @export
-get__initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_index = 0) {
+get_initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_index = 0) {
+  
+  print("Fetching initial publication list from scholar's page")
+  
   nb_publications <- 100 #The maximum number of publications we can have on a given scholar page
   sortby <-"citation"
 
@@ -322,7 +328,7 @@ get__initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_i
     
     #To recover the publication ID we extract it from the link in the page
     links <- html_attr(publications,"href")
-    print(links)
+    publication_ids <- c()
     #The publication_id is located in the URL after "citation_for_view"
     for(i in 1:length(links)){
       publication_ids[i] <- strsplit(links[i],"for_view=")[[1]][2]
@@ -331,10 +337,6 @@ get__initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_i
       #They are separated by ":"
       publication_ids[i] <- strsplit(publication_ids[i],":")[[1]][2]
     }
-    print("###########£###########£###########£###########£")
-    print(publication_ids)
-    
-    
     
     #Total citation information is located in a class="gsc_a_ac gs_ibl"
     citations <- html_text(html_nodes(page_html,".gsc_a_ac.gs_ibl"))
@@ -351,7 +353,7 @@ get__initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_i
     #If the "show more" button is disabled, we don't have any more publications to parse
     is_button_disabled <- grepl("disabled", as.character(button), fixed = TRUE)
     if(!is_button_disabled){
-      publication_list <-  rbind(publication_list,get__initial_publication_list(scholar_id,start_index=start_index+nb_publications))
+      publication_list <-  rbind(publication_list,publication_list_tmp,get_initial_publication_list(scholar_id,start_index=start_index+nb_publications))
     }
     
     # Now a final check to see if we are at the initial call of this function

@@ -55,7 +55,7 @@ compose_publication_url <- function(scholar_id, publication_id){
 ###'
 ###' @return the response from GET
 get_scholar_page <- function(url){
-  sleep_time <- x1 <- runif(1, 1.1, 2.4)
+  sleep_time <- x1 <- runif(1, 1.1, 1.6)
   Sys.sleep(sleep_time)
   resp <- httr::GET(url)
   print(resp)

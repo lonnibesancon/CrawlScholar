@@ -166,7 +166,9 @@ id <- "PMZ3h7sAAAAJ"
 s <- get_scholar_profile(id)
 publication <- get_publications(s$id)
 
-publication_list<-get__initial_publication_list(id, flush_cache = TRUE)
+publication_list <-clean_publication_list(id)
+
+publication_list<-get_initial_publication_list(id, flush_cache = TRUE)
 
 url <- compose_scholar_url(id)
 url <- "https://scholar.google.com/citations?hl=en&user=PMZ3h7sAAAAJ"
