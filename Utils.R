@@ -58,7 +58,6 @@ get_scholar_page <- function(url){
   sleep_time <- x1 <- runif(1, 1.1, 1.6)
   Sys.sleep(sleep_time)
   resp <- httr::GET(url)
-  print(resp)
   if (httr::status_code(resp) == 200) {
     return(resp)
   }

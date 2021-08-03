@@ -353,7 +353,7 @@ get_initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_in
     #If the "show more" button is disabled, we don't have any more publications to parse
     is_button_disabled <- grepl("disabled", as.character(button), fixed = TRUE)
     if(!is_button_disabled){
-      publication_list <-  rbind(publication_list,publication_list_tmp,get_initial_publication_list(scholar_id,start_index=start_index+nb_publications))
+      publication_list <-  rbind(publication_list,get_initial_publication_list(scholar_id,start_index=start_index+nb_publications,flush_cache=flush_cache))
     }
     
     # Now a final check to see if we are at the initial call of this function
@@ -363,6 +363,6 @@ get_initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_in
       saveCache(data, key=list(id, start_index))
     }
   }
-  
+  publication_list[publication_list==""] <- NA
   return(publication_list)
 }
