@@ -51,11 +51,20 @@ cleaned_publication_list <- clean_publication_list(publication_list,id)
 file_name <- paste("Data-",scholar_name,".csv",sep="")
 write.csv(cleaned_publication_list,file_name)
 
-current_publication <- cleaned_publication_list[18,]
+url <- "https://scholar.google.fr/citations?view_op=view_citation&hl=en&user=ulkW7fgAAAAJ&citation_for_view=ulkW7fgAAAAJ:u-x6o8ySG0sC"
+result <- get_scholar_page(url)
+cache_info(result)
 
+current_publication <- cleaned_publication_list[18,]
 authors <- strsplit(current_publication$author,", ")
 authors <- authors[[1]]
-publication$nb_authors <- length(authors)
+authors
+for (i in  1:length(authors)){
+  authors[i] <- get_ascii_string(authors[i])
+}
+authors
+scholar_name <- iconv(scholar_name, to='ASCII//TRANSLIT')
+position <- match(scholar_name,authors)
 
 #We add author position for the scholar that we are interested in
 #There might special characters automatically left out in the publication metadata
@@ -79,7 +88,13 @@ s2 <- "Paris"
 s3 <- "Linköping"
 s4 <- "Besançon" #Manual input
 
-s1 <- iconv(s1, to='ASCII')
+
+s1b <- get_ascii_string(s1)
+s1b
+
+latin=iconv(s1,'utf8','latin1')
+
+s1 <- iconv(s1, to='ASCII//TRANSLIT', sub='/')
 s2 <- iconv(s2, to='ASCII//TRANSLIT')
 s3 <- iconv(s3, to='ASCII//TRANSLIT')
 s4 <- iconv(s4, to='ASCII//TRANSLIT')
@@ -90,7 +105,7 @@ s2 <- "Paris"
 s3 <- "Linköping"
 s4 <- "Besançon" #Manual input
 
-s1 <- iconv(s1, to='ASCII')
+s1 <- iconv(s1, to='ASCII//TRANSLIT')
 s2 <- iconv(s2, to='ASCII//TRANSLIT')
 s3 <- iconv(s3, to='ASCII//TRANSLIT')
 s4 <- iconv(s4, to='ASCII//TRANSLIT')
@@ -107,3 +122,47 @@ if (is.na(position)){
   position <- match(scholar_name,authors)
 }
 publication$position <- position
+
+
+
+
+
+
+
+# Get profile infor
+
+url <- "https://scholar.google.com/citations?user=ulkW7fgAAAAJ&hl=en"
+page <- get_scholar_page(url) 
+html_page <- read_html(page)
+tables <- html_table(html_page)
+
+# Citation data is in tables[[1]]
+stats <- tables[[1]]
+rows <- nrow(stats)
+
+year <- names(stats[3])
+year <- strsplit(year," ")[[1]][2]
+
+stats[[1]][1]
+
+name <- html_text(html_nodes(html_page,"#gsc_prf_in"))
+infos <- html_text(html_nodes(html_page,".gsc_prf_il"))
+infos <- strsplit(infos[1],",")
+infos <- infos[[1]]
+position <- infos[1]
+affiliation <- infos[2]
+
+scholar <-
+
+scholar$id <- id
+scholar$name <- name
+scholar$affiliation <- affiliation
+scholar$position <-position
+
+
+id <- "ulkW7fgAAAAJ"
+s <- get_scholar_profile(id)
+publication <- get_publications(s$id)
+
+
+

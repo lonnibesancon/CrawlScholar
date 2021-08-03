@@ -1,21 +1,21 @@
-##' Gets accurate information about a researcher's complete list of publications
-##' 
-##' Crawls through the list of publications of a scholar to get more accurate information
-##' All publications without a publication_year will be removed from the list of publications
-##' to ensure that we only preserve what should really be considered a publication
-##' The function uses an internal timer to avoid being banned from crawling google scholar
-##'
-##' @param author_id the id from the scholar, must be non null
-##' @param publication_list the list of publication from a scholar (optional)
-##'
-##' @return publication_list the updated publication list with more accurate information
+###' Gets accurate information about a researcher's complete list of publications
+###' 
+###' Crawls through the list of publications of a scholar to get more accurate information
+###' All publications without a publication_year will be removed from the list of publications
+###' to ensure that we only preserve what should really be considered a publication
+###' The function uses an internal timer to avoid being banned from crawling google scholar
+###'
+###' @param author_id the id from the scholar, must be non null
+###' @param publication_list the list of publication from a scholar (optional)
+###'
+###' @return publication_list the updated publication list with more accurate information
 clean_publication_list <- function(publication_list, author_id){
   #First we will need the name of the author for the rest of the processing 
   #Namely to find author's position in the paper
   #This will be passed to the clean_publication_data() function
   scholar_profile <- get_profile(author_id)
   
-  sleep_time <- x1 <- runif(1, 1.1, 7.9)
+  
   if(missing(author_id)) {
     error("Parameter 'author_id' should be set")
   }
@@ -38,7 +38,6 @@ clean_publication_list <- function(publication_list, author_id){
     current_publication <- publication_list[i,]
     current_publication <- clean_publication_data(current_publication,author_id,scholar_profile$name)
     cleaned_list <- rbind(cleaned_list, current_publication)
-    Sys.sleep(sleep_time)
   }
   close(pb)
   return (cleaned_list)
@@ -46,33 +45,34 @@ clean_publication_list <- function(publication_list, author_id){
 }
 
 
-##' Gets accurate information about a specific publication
-##'
-##' Gets accurate information from the google scholar page of a publication
-##' Completes and correct partial information gathered from a scholar's personnal page
-##' Each page gives the following information 
-##' title, link to PDF <-- we already have these so we ignore them
-##' author list, publication date, venue, pages <-- we need to add/correct with these
-##'
-##' This function can be called on a specific publication only
-##' Or can be used to clean a whole list of publications by the function 'clean_all_publications'
-##'
-##' @param publication a publication as obtained from a scholar's publication list, must be non null
-##' @param author_id the id of the scholar, must be non null
-##' @param author_name the name of the scholar that we are interested in (optional). It is used to derive their position in the author list
-##'
-##' @return the updated publication with more accurate information
+###' Gets accurate information about a specific publication
+###'
+###' Gets accurate information from the google scholar page of a publication
+###' Completes and correct partial information gathered from a scholar's personnal page
+###' Each page gives the following information 
+###' title, link to PDF <-- we already have these so we ignore them
+###' author list, publication date, venue, pages <-- we need to add/correct with these
+###'
+###' This function can be called on a specific publication only
+###' Or can be used to clean a whole list of publications by the function 'clean_all_publications'
+###'
+###' @param publication a publication as obtained from a scholar's publication list, must be non null
+###' @param author_id the id of the scholar, must be non null
+###' @param author_name the name of the scholar that we are interested in (optional). It is used to derive their position in the author list
+###'
+###' @return the updated publication with more accurate information
 clean_publication_data <- function(publication, author_id, scholar_name){
   
-  pub_page <- "https://scholar.google.com/citations?view_op=view_citation&hl=en"
-  citation_for_view_url <- paste("citation_for_view=",author_id,":",publication$pubid, sep="")
-  author_id_url <- paste("user=",author_id, sep="")
-  pub_page <- paste(pub_page,author_id_url,citation_for_view_url, sep="&")
+  #pub_page <- "https://scholar.google.com/citations?view_op=view_citation&hl=en"
+  #citation_for_view_url <- paste("citation_for_view=",author_id,":",publication$pubid, sep="")
+  #author_id_url <- paste("user=",author_id, sep="")
+  #pub_page <- paste(pub_page,author_id_url,citation_for_view_url, sep="&")
+  pub_page <- compose_publication_url(author_id, publication$pubid)
   if (is.null(pub_page)){
     errorMessage <- paste("The scholar page for this publication is empty\n The function tried to fetch the following page:\n'",pub_page,"'",sep="")
     stop(errorMessage)
   } 
-  resp <- get_scholar_resp(pub_page)
+  resp <- get_scholar_page(pub_page)
   if (is.null(resp)){
     errorMessage <- paste("The scholar page for this publication is empty\n The function tried to fetch the following page:\n'",pub_page,"'",sep="")
     stop(errorMessage)
@@ -142,7 +142,7 @@ clean_publication_data <- function(publication, author_id, scholar_name){
   #There might special characters automatically left out in the publication metadata
   #So we look for ASCII equivalences
   for (i in  1:length(authors)){
-    authors[i] <- iconv(authors[i], to='ASCII//TRANSLIT')
+    authors[i] <- get_ascii_string(authors[i])
   }
   scholar_name <- iconv(scholar_name, to='ASCII//TRANSLIT')
   position <- match(scholar_name,authors)
@@ -161,12 +161,12 @@ clean_publication_data <- function(publication, author_id, scholar_name){
   return(publication)
 }
 
-##' Gets citation history for a specific publication
-##'
-##' Extracts citation history from the google scholar page of a publication based on the barchart embedded in the page
-##' @param resp_parsed HTML-parsed version of the response page
-##'
-##' @return the citation history of a specific publication as a string "year:citations;year:citations..."
+###' Gets citation history for a specific publication
+###'
+###' Extracts citation history from the google scholar page of a publication based on the barchart embedded in the page
+###' @param resp_parsed HTML-parsed version of the response page
+###'
+###' @return the citation history of a specific publication as a string "year:citations;year:citations..."
 fetch_publication_citation_history <- function(resp_parsed){
   years <- html_nodes(resp_parsed,".gsc_oci_g_t")
   cites_per_year <- html_nodes(resp_parsed,".gsc_oci_g_al")
@@ -188,16 +188,16 @@ fetch_publication_citation_history <- function(resp_parsed){
 }
 
 
-##' Look for the information of the publication venue within a publication details page on Google scholar
-##' 
-##' The case of the venue is quite peculiar and error-prone as depending on the publication type (and the accuracy of the record)
-##' there are many different fields that could represent the publication venue
-##' So far, the following have been found to contain the publication venue "Journal | Book | Source | Conference | Publisher"
-##' The case of "Publisher" seems to be the last resort for some preprints. It can only be used if none of the other fields are found
-##'
-##' @param fields the html_text() version of the HTML nodes of the fields in the publication information page
-##'
-##' @return the index of the venue field, if found, -1 otherwise
+###' Look for the information of the publication venue within a publication details page on Google scholar
+###' 
+###' The case of the venue is quite peculiar and error-prone as depending on the publication type (and the accuracy of the record)
+###' there are many different fields that could represent the publication venue
+###' So far, the following have been found to contain the publication venue "Journal | Book | Source | Conference | Publisher"
+###' The case of "Publisher" seems to be the last resort for some preprints. It can only be used if none of the other fields are found
+###'
+###' @param fields the html_text() version of the HTML nodes of the fields in the publication information page
+###'
+###' @return the index of the venue field, if found, -1 otherwise
 find_venue_index<- function(fields){
   #First we create a list of all possible fields
   #"Publisher" should always be the last one of the list
@@ -212,14 +212,14 @@ find_venue_index<- function(fields){
   return (-1)
 }
 
-##' Look for a specific field within a publication details page on Google scholar
-##' 
-##' If the field is found, the function will return its index. -1 if not
-##'
-##' @param field_to_find the string of the field to look for, cannot be null
-##' @param fields the html_text() version of the HTML nodes of the fields in the publication information page
-##'
-##' @return the index if the field is found, -1 otherwise.
+###' Look for a specific field within a publication details page on Google scholar
+###' 
+###' If the field is found, the function will return its index. -1 if not
+###'
+###' @param field_to_find the string of the field to look for, cannot be null
+###' @param fields the html_text() version of the HTML nodes of the fields in the publication information page
+###'
+###' @return the index if the field is found, -1 otherwise.
 find_field_index<- function(field_to_find,fields){
   if(is.null(field_to_find) || is.na(field_to_find)){
     error("Parameter 'field_to_find' must be set")
@@ -243,14 +243,14 @@ find_field_index<- function(field_to_find,fields){
 }
 
 
-##' Remove publications that are likely to have been wrongly added by Google Sholar
-##' 
-##' Current parameters to check that a publication is "valid" is the fact that it has a publication year
-##' TODO if the year is not given but the publication is cited, leave it in
-##'
-##' @param publication_list the list of publication from a scholar, must be non null
-##'
-##' @return publication_list the updated publication list with more accurate information
+###' Remove publications that are likely to have been wrongly added by Google Sholar
+###' 
+###' Current parameters to check that a publication is "valid" is the fact that it has a publication year
+###' TODO if the year is not given but the publication is cited, leave it in
+###'
+###' @param publication_list the list of publication from a scholar, must be non null
+###'
+###' @return publication_list the updated publication list with more accurate information
 curate_publication_list <- function(publication_list){
   #if the scholar has no publications we return
   if(is.null(publication_list) || is.na(publication_list)){
