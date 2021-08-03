@@ -348,7 +348,6 @@ get_initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_in
     publication_list <- data.frame(year=years,title=titles,citation=citations,publication_id=publication_ids)
     
     button <- html_nodes(page_html,"#gsc_bpf_more")
-    as.character(button)
     
     #If the "show more" button is disabled, we don't have any more publications to parse
     is_button_disabled <- grepl("disabled", as.character(button), fixed = TRUE)

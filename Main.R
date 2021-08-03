@@ -1,6 +1,6 @@
 ################################################################
 # Main.R
-# Code for to fetch data for Academic Hiring Visualization
+# Code to fetch data for Academic Hiring Visualization
 # CC-BY Lonni Besançon et al., 2021
 ################################################################
 
@@ -124,5 +124,17 @@ if (is.na(position)){
 }
 publication$position <- position
 
+url <- "https://dl.acm.org/doi/abs/10.1145/2807442.2807488"
+respt <- httr::GET(url)
+page_html <- read_html(respt)
+
+#<div _ngcontent-qdl-c29="" class="u-pb-1 stats-document-abstract-doi"><strong _ngcontent-qdl-c29="">DOI: </strong><!----><a _ngcontent-qdl-c29="" append-to-href="?src=document" target="_blank" href="https://doi.org/10.1109/VAST.2010.5652896">10.1109/VAST.2010.5652896</a><!----></div>
+
+  
+doi <- html_nodes(page_html,"document-main-left-trail-content")
+doi 
+page_text <- as.character(page_html)
+
+write(page_text,"test2.csv")
 
 
