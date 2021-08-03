@@ -277,8 +277,6 @@ curate_publication_list <- function(publication_list){
 }
 
 
-
-
 ##' Gets the publications for a scholar
 ##'
 ##' Gets the publications of a specified scholar.
@@ -300,7 +298,7 @@ curate_publication_list <- function(publication_list){
 ##' @importFrom rvest html_nodes html_text html_attr
 ##' @import R.cache
 ##' @export
-get_publications <- function(scholar_id, flush_cache=FALSE, start_index = 0) {
+get__initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_index = 0) {
   nb_publications <- 100 #The maximum number of publications we can have on a given scholar page
   sortby <-"citation"
 
@@ -324,7 +322,7 @@ get_publications <- function(scholar_id, flush_cache=FALSE, start_index = 0) {
     
     #To recover the publication ID we extract it from the link in the page
     links <- html_attr(publications,"href")
-    
+    print(links)
     #The publication_id is located in the URL after "citation_for_view"
     for(i in 1:length(links)){
       publication_ids[i] <- strsplit(links[i],"for_view=")[[1]][2]
@@ -333,8 +331,10 @@ get_publications <- function(scholar_id, flush_cache=FALSE, start_index = 0) {
       #They are separated by ":"
       publication_ids[i] <- strsplit(publication_ids[i],":")[[1]][2]
     }
+    print("###########£###########£###########£###########£")
+    print(publication_ids)
     
-    publication_ids <- strsplit(publication_ids,":")[[1]][2]
+    
     
     #Total citation information is located in a class="gsc_a_ac gs_ibl"
     citations <- html_text(html_nodes(page_html,".gsc_a_ac.gs_ibl"))
@@ -351,7 +351,7 @@ get_publications <- function(scholar_id, flush_cache=FALSE, start_index = 0) {
     #If the "show more" button is disabled, we don't have any more publications to parse
     is_button_disabled <- grepl("disabled", as.character(button), fixed = TRUE)
     if(!is_button_disabled){
-      publication_list <-  rbind(publication_list,get_publications(scholar_id,start_index=start_index+nb_publications))
+      publication_list <-  rbind(publication_list,get__initial_publication_list(scholar_id,start_index=start_index+nb_publications))
     }
     
     # Now a final check to see if we are at the initial call of this function

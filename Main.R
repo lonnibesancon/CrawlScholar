@@ -166,7 +166,7 @@ id <- "PMZ3h7sAAAAJ"
 s <- get_scholar_profile(id)
 publication <- get_publications(s$id)
 
-publication_list<-get_publications(id, flush_cache = TRUE)
+publication_list<-get__initial_publication_list(id, flush_cache = TRUE)
 
 url <- compose_scholar_url(id)
 url <- "https://scholar.google.com/citations?hl=en&user=PMZ3h7sAAAAJ"
@@ -187,7 +187,7 @@ for(i in 1:length(links)){
   publication_ids[i] <- strsplit(publication_ids[i],":")[[1]][2]
 }
 
-publication_ids <- strsplit(publication_ids,":")[[1]][2]
+
 
 #Total citation information is located in a class="gsc_a_ac gs_ibl"
 citations <- html_text(html_nodes(page_html,".gsc_a_ac.gs_ibl"))
