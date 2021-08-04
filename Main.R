@@ -47,7 +47,7 @@ scholar <- get_scholar_profile(id)
 scholar_name <- scholar$name 
 
 publication_list <- get_publications(id)
-cleaned_publication_list <- clean_publication_list(publication_list,id)
+cleaned_publication_list <- clean_publication_list(id,publication_list)
 
 file_name <- paste("Data-",scholar_name,".csv",sep="")
 write.csv(cleaned_publication_list,file_name)
@@ -84,13 +84,16 @@ citation_history <- fetch_publication_citation_history(resp_parsed)
 publication$citation_history <- citation_history
 
 
+pub <- cleaned_publication_list[18,]
+
+
 s1 <- "Besançon" #as read from an input file I cannot modify
 s2 <- "Paris"
 s3 <- "Linköping"
 s4 <- "Besançon" #Manual input
 
 
-s1b <- get_ascii_string(s1)
+s1b <- get_ascii_string(pub$author)
 s1b
 
 latin=iconv(s1,'utf8','latin1')

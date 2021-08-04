@@ -45,8 +45,9 @@ get_scholar_profile <- function(scholar_id) {
   url <- compose_scholar_url(scholar_id)
   page <- get_scholar_page(url) 
   html_page <- read_html(page)
+  print(html_page)
   tables <- html_table(html_page)
-  
+
   # Citation data is in tables[[1]]
   stats <- tables[[1]]
   rows <- nrow(stats)
