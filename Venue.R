@@ -122,16 +122,17 @@ get_journal_impact_factor <- function(venue, max_distance=5){
   length(tables)
   list_of_journals <- c()
   for(i in 1:length(tables)){
-    list_of_journals <- rbind(list_of_journals, as.data.frame(table[i]))
+    list_of_journals <- rbind(list_of_journals, as.data.frame(tables[i]))
   }
   colnames(list_of_journals) <- c("rank","journal","IF")
   #We want to remove the old headers from the reading of the HTML page
   list_of_journals <- list_of_journals[-1,]
   for(i in 1:nrow(list_of_journals)){
+    str_replace_all(list_of_journals$journal[i], "\n", " ")
     list_of_journals$journal[i] <- str_replace_all(list_of_journals$journal[i], "[^[:alnum:] ]", "") #Maybe use [^a-zA-Z0-9]
   }
-  list_of_journals$journal <- tolower(list_of_journals$journal) 
-  index_min <- get_index_best_matching_string(venue, list_of_journals$journal,max_distance)
+  
+  index_min <- get_index_best_matching_string(venue, list_of_journals$journal,max_distance=max_distance)
   matching_journal <- c(NA,NA)
   if(index_min!=-1){
     matching_journal <- c(list_of_journals$journal[index_min],list_of_journals$IF[index_min])

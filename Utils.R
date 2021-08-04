@@ -45,16 +45,17 @@ compose_publication_url <- function(scholar_id, publication_id){
 ###' Returns the index of the best match if found
 ###' 
 ###' The function considers that a best match is found if the distance between the two strings is lower than a specific distance
-###' 
+###' All parameters are converted to lower_case if the paramater "case_sensitive" is set to FALSE
 ###'
 ###' @param string
 ###' @param list
 ###' @param max_distance the maximum distance between the input string and the list.
+###' @param case_sensitive should the search be case sensitive. Default is FALSE
 ###'
 ###' @return the response from GET
 ###' @author Lonni Besançon
-get_index_best_matching_string <- function(string,list,max_distance){
-  list_of_distances <- stringdist(c(string),list)
+get_index_best_matching_string <- function(string,list,max_distance,case_sensitive=FALSE){
+  list_of_distances <- stringdist(tolower(string),tolower(list))
   index_min <- -1
   min_value <- Inf
   

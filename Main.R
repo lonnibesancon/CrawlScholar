@@ -47,7 +47,7 @@ scholar <- get_scholar_profile(id)
 scholar_name <- scholar$name 
 
 publication_list <- get_publications(id)
-cleaned_publication_list <- get_publication_list(id,publication_list)
+cleaned_publication_list <- get_publication_list(id)
 
 new_pub_list <- curate_publication_list(cleaned_publication_list)
 
@@ -152,3 +152,10 @@ conference_portal <- "http://portal.core.edu.au/conf-ranks/"
 publication$venue <- tolower("IEEE Transactions on Visualization and Computer Graphics")
 
 test <- get_journal_impact_factor(publication$venue)
+
+for (i in 1:nrow(new_pub_list)){
+  res <- get_journal_impact_factor(new_pub_list$venue[i])
+  new_pub_list$impact_factor[i] <- res[2]
+  new_pub_list$journal_found[i] <- res[1]
+}
+
