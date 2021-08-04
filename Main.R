@@ -47,7 +47,9 @@ scholar <- get_scholar_profile(id)
 scholar_name <- scholar$name 
 
 publication_list <- get_publications(id)
-cleaned_publication_list <- clean_publication_list(id,publication_list)
+cleaned_publication_list <- get_publication_list(id,publication_list)
+
+new_pub_list <- curate_publication_list(cleaned_publication_list)
 
 file_name <- paste("Data-",scholar_name,".csv",sep="")
 write.csv(cleaned_publication_list,file_name)
@@ -138,3 +140,46 @@ page_text <- as.character(page_html)
 write(page_text,"test2.csv")
 
 
+
+
+
+#Venue tests
+
+publication <- new_pub_list[1,]
+journal_portal <- "http://portal.core.edu.au/jnl-ranks/"
+conference_portal <- "http://portal.core.edu.au/conf-ranks/"
+
+get_core_ranking(publication)
+
+#The first thing we need to do is clean the venue of all characters that would prevent a match in the core ranking
+clean_venue <- str_replace_all(publication$venue, "[^[:alnum:] ]", "") #Maybe use [^a-zA-Z0-9]
+clean_venue <- str_replace_all(clean_venue, " ","+")
+
+search_string <- paste0("?search=",clean_venue,"&by=all")
+url <- paste0(journal_portal,search_string)
+resp <- httr::GET(url)
+page_html <- read_html(resp)
+tables <- as.data.frame(html_table(page_html))
+
+
+if(!nrow(tables)==0){
+  venue_name <- tables[1]
+  venue_ranking <- table[3]
+  venue_ranking_year <- table[2]
+}
+#If we didn't find it before it might be a conference
+else{
+  to_replace <- c("Proceedings of the", "Proceedings", "Proceddings of", "Proc of the", "Proc of")
+  patterns <- str_c(to_replace, collapse="|")
+  clean_venue <- str_replace_all(publication$venue, regex(patterns, ignore_case = TRUE), "")
+  #Now we remove numbers
+  clean_venue <- gsub('[[:digit:]]+', '', clean_venue)
+  #And finally all of the whitespaces
+  clean_venue <- str_replace_all(clean_venue, " ","+")
+  get_core_ranking_venue(clean_venue, is_journal = FALSE)
+}
+
+
+venue <- "IEEE Transactions on Visualization and Computer Graphics"
+venue <- str_replace_all(venue, " ","+")
+ranking <- get_core_ranking_venue(venue)

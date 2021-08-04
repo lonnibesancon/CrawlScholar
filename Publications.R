@@ -9,7 +9,7 @@
 ###' @param publication_list the list of publication from a scholar (optional)
 ###'
 ###' @return publication_list the updated publication list with more accurate information
-clean_publication_list <- function(scholar_id, publication_list){
+get_publication_list <- function(scholar_id, publication_list){
   
   if(missing(scholar_id)) {
     error("Parameter 'scholar_id' should be set")
@@ -32,7 +32,7 @@ clean_publication_list <- function(scholar_id, publication_list){
   }
   
   #First we need to curate the publication list to avoid errors when fetching more accurate information
-  publication_list <- curate_publication_list(publication_list)
+  publication_list <- remove_publications_no_year(publication_list)
   
   cleaned_list <- c()
   pb = txtProgressBar(min = 0, max = nrow(publication_list), initial = 0, style= 3)
@@ -245,29 +245,59 @@ find_field_index<- function(field_to_find,fields){
 }
 
 
-###' Remove publications that are likely to have been wrongly added by Google Sholar
+###' Further remove publications that are likely to have been errors
 ###' 
-###' Current parameters to check that a publication is "valid" is the fact that it has a publication year
-###' TODO if the year is not given but the publication is cited, leave it in
+###' After a full publication list has been generated, we should have data on the researcher's position in the author list
+###' If the author was not found, it is likely this paper's metadata is erroneous or that the publication shouldn't have been added
+###' to the researcher's page.
+###' We remove it here
 ###'
 ###' @param publication_list the list of publication from a scholar, must be non null
 ###'
 ###' @return publication_list the updated publication list with more accurate information
+###' @author Lonni Besançon
 curate_publication_list <- function(publication_list){
+  index_of_publications_to_remove <- c()
+  for (i in 1:nrow(publication_list)){
+    if(is.na(publication_list$position[i])){
+      index_of_publications_to_remove <- c(index_of_publications_to_remove, i)
+    }
+  }
+  if(is.null(index_of_publications_to_remove)){
+    print("All publications in the list for this scholar are considered valid, none removed")
+    return (publication_list)
+  }
+  publication_list <- publication_list[-index_of_publications_to_remove,]
+  result_message <- paste(length(index_of_publications_to_remove)," publications were removed from the list of publications (",index_of_publications_to_remove,")",sep="")
+  print(result_message)
+  
+  return(publication_list)
+}
+
+
+###' Remove publications that are likely to have been wrongly added by Google Sholar
+###' 
+###' Current parameters to check that a publication is "valid" is the fact that it has a publication year
+###' Such publications are therefore removed
+###' The function is called by get_publication_list() automatically to avoid errors when fetching more detailed information
+###' on a given publication
+###'
+###' @param publication_list the list of publication from a scholar, must be non null
+###'
+###' @return publication_list the updated publication list with more accurate information
+###' @author Lonni Besançon
+remove_publications_no_year <- function(publication_list){
   #if the scholar has no publications we return
   if(is.null(publication_list) || is.na(publication_list)){
     warning("List of publications is empty")
     return (NA);
   }
   index_of_publications_to_remove <- c()
-  pb = txtProgressBar(min = 0, max = nrow(publication_list), initial = 0, style= 3)
   for (i in 1:nrow(publication_list)){
     if(is.na(publication_list$year[i])){
       index_of_publications_to_remove <- c(index_of_publications_to_remove, i)
     }
-    setTxtProgressBar(pb,i)
   }
-  close(pb)
   if(is.null(index_of_publications_to_remove)){
     print("All publications in the list for this scholar are considered valid, none removed")
     return (publication_list)

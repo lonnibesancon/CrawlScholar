@@ -9,7 +9,7 @@
 ###' @return a table of all co-authors and how many publications they participated on (name and occurences)
 ###' @author Lonni Besançon
 get_coauthors <- function(publication_list, scholar_id){
-  scholar <- get_profile(scholar_id)
+  scholar <- get_scholar_profile(scholar_id)
   scholar$name 
   
   co_authors <- c()
