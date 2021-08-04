@@ -23,7 +23,7 @@ get_core_ranking <- function(publication){
   #The first thing we need to do is clean the venue of all characters that would prevent a match in the core ranking
   clean_venue <- str_replace_all(publication$venue, "[^[:alnum:] ]", "") #Maybe use [^a-zA-Z0-9]
   clean_venue <- str_replace_all(clean_venue, " ","+")
-  ranking <- get_core_ranking_venue(clean_venue,print_query=TRUE)
+  ranking <- get_core_ranking_venue(clean_venue)
   
   #If this is empty, then it could be a conference
   if(is.na(ranking[1])){
@@ -35,7 +35,7 @@ get_core_ranking <- function(publication){
     clean_venue <- gsub('[[:digit:]]+', '', clean_venue)
     #And finally all of the whitespaces
     clean_venue <- str_replace_all(clean_venue, " ","+")
-    ranking <- get_core_ranking_venue(clean_venue, is_journal = FALSE,print_query=TRUE)
+    ranking <- get_core_ranking_venue(clean_venue, is_journal = FALSE)
   }
   
   return(ranking)
@@ -97,5 +97,22 @@ get_core_ranking_venue <- function(venue,is_journal=TRUE,print_query=FALSE){
   else{
     return(c(NA,NA,NA))
   }
-  
+}
+
+
+###' Gets the journal impact factor for a specific venue
+###'
+###' @param venue a specific venue name, has to be a journal name
+###'
+###' @return a list containing the name found in the list and the Impact Factor
+###' @author Lonni Besançon
+###' @examples {
+###'   venue <- "IEEE Transactions on Visualization and Computer Graphics"
+###'   venue <- str_replace_all(venue, " ","+")
+###'   ranking <- get_core_ranking_venue(venue)
+###' }
+get_journal_impact_factor <- function(venue){
+  url <- "https://impactfactorforjournal.com/jcr-2021/"
+  resp <- httr::GET(url)
+  page_html <- read_html(resp)
 }
