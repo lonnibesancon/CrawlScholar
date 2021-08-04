@@ -106,7 +106,10 @@ get_core_ranking_venue <- function(venue,is_journal=TRUE,print_query=FALSE){
 ###'
 ###' @param venue a specific venue name, has to be a journal name
 ###' @param max_distance the maximum allowed distance between the venue and a potential match. Set by default at 10 as they might be differences in the use of articles like "The"
-###'
+###' @param list_of_journals a list of journals and their impact factors. This function assumes that it contains at least a column "journal" and a column "IF". Null by default.
+###' 
+###' @note get_batch_journal_impact_factor() will give it the list of journals
+###' 
 ###' @return a list containing the name found in the list and the Impact Factor
 ###' @author Lonni Besançon
 ###' @examples {
@@ -114,7 +117,12 @@ get_core_ranking_venue <- function(venue,is_journal=TRUE,print_query=FALSE){
 ###'   venue <- str_replace_all(venue, " ","+")
 ###'   ranking <- get_core_ranking_venue(venue)
 ###' }
-get_journal_impact_factor <- function(venue, max_distance=5){
+get_journal_impact_factor <- function(venue, max_distance=5, list_of_journals=NULL){
+  matching_journal <- c(NA,NA)
+  if(is.na(venue) || is.null(venue)){
+    warning("The venue was empty, returning.")
+    return(matching_journal);
+  }
   url <- "https://impactfactorforjournal.com/jcr-2021/"
   resp <- httr::POST(url)
   page_html <- read_html(resp)
@@ -133,9 +141,37 @@ get_journal_impact_factor <- function(venue, max_distance=5){
   }
   
   index_min <- get_index_best_matching_string(venue, list_of_journals$journal,max_distance=max_distance)
-  matching_journal <- c(NA,NA)
   if(index_min!=-1){
     matching_journal <- c(list_of_journals$journal[index_min],list_of_journals$IF[index_min])
   }
   return (matching_journal)
+}
+
+
+###' Convenience function to add the Impact factor of all publications in a list of venues
+###'
+###' @param venues_list the list of venues to consider
+###' @param max_distance the maximum allowed distance between the venue and a potential match. Set by default at 10 as they might be differences in the use of articles like "The"
+###'
+###' @return a dataframe containing the name found in the list and the Impact Factor
+###' @author Lonni Besançon
+###' @examples {
+###'   publication_list <- get_publication_list(scholar_id)
+###'   results <- get_batch_journal_impact_factor(publication_list$venue)
+###' }
+get_batch_journal_impact_factor <- function(venues_list, max_distance=5){
+  print("Fetching journal impact factors for the list of venues. This may take a while")
+  results <- c()
+  length(venues_list)
+  pb = txtProgressBar(min = 0, max = length(venues_list), initial = 0, style= 3)
+  for (i in 1:length(venues_list)){
+    setTxtProgressBar(pb,i)
+    if(is.na(venues_list[i])){
+      next
+    }
+    res <- get_journal_impact_factor(new_pub_list$venue[i])
+    results <- rbind(results,c(res[1],res[2]))
+  }
+  close(pb)
+  return (results)
 }

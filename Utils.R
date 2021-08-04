@@ -51,11 +51,30 @@ compose_publication_url <- function(scholar_id, publication_id){
 ###' @param list
 ###' @param max_distance the maximum distance between the input string and the list.
 ###' @param case_sensitive should the search be case sensitive. Default is FALSE
+###' @param flush_cash if the cash should be flushed
 ###'
 ###' @return the response from GET
+###' 
+###' @import R.cache
 ###' @author Lonni Besançon
-get_index_best_matching_string <- function(string,list,max_distance,case_sensitive=FALSE){
-  list_of_distances <- stringdist(tolower(string),tolower(list))
+get_index_best_matching_string <- function(string,list,max_distance,case_sensitive=FALSE, flush_cash=FALSE){
+  
+  # Define the cache path
+  cache.dir <- file.path(tempdir(), "r-scholar")
+  setCacheRootPath(cache.dir)
+  
+  # Clear the cache if requested
+  if (flush_cache) saveCache(NULL, list(string,max_distance))
+  
+  # Check if already cached
+  list_of_distances <- loadCache(list(string,max_distance))
+  
+  # If not, get the data and save it to cache
+  if (is.null(list_of_distances)) {
+    list_of_distances <- stringdist(tolower(string),tolower(list))
+  }
+  
+  
   index_min <- -1
   min_value <- Inf
   

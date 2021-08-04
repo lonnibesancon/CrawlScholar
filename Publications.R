@@ -268,7 +268,7 @@ curate_publication_list <- function(publication_list){
     return (publication_list)
   }
   publication_list <- publication_list[-index_of_publications_to_remove,]
-  result_message <- paste(length(index_of_publications_to_remove)," publications were removed from the list of publications (",index_of_publications_to_remove,")",sep="")
+  result_message <- paste(length(index_of_publications_to_remove),"1 publication was removed from the list of publications (",index_of_publications_to_remove,")",sep="")
   print(result_message)
   
   return(publication_list)
@@ -303,33 +303,33 @@ remove_publications_no_year <- function(publication_list){
     return (publication_list)
   }
   publication_list <- publication_list[-index_of_publications_to_remove,]
-  result_message <- paste(length(index_of_publications_to_remove)," publications were removed from the list of publications (",index_of_publications_to_remove,")",sep="")
+  result_message <- paste(length(index_of_publications_to_remove),"1 publication was removed from the list of publications (",index_of_publications_to_remove,")",sep="")
   print(result_message)
   return (publication_list)
 }
 
 
-##' Gets the publications for a scholar
-##'
-##' Gets the publications of a specified scholar.
-##' The function only fetches basic information such as title, year and number of citations.
-##' All the other informations presented on this page are not accurate enough
-##' Another function will fetch more accurate information
-##' The function recursively calls itself if the number of publications from the scholar is greater than 100
-##' In this case we recursively call the function on the next 100 until we are done crawling through all publications
-##'
-##' @param id a string containing a valid Google Scholar ID.  
-##' @param flush_cache should the cache be flushed? 
-##' @param start_index the first publication to load
-##' 
-##' @return a data frame listing the publications and their details.
-##' These include the publication title, author, journal, number,
-##' cites, year, and the publication ID. By default, the list is sorted by citation.
-##' @importFrom stringr str_extract str_sub str_trim str_replace
-##' @importFrom xml2 read_html
-##' @importFrom rvest html_nodes html_text html_attr
-##' @import R.cache
-##' @export
+###' Gets the publications for a scholar
+###'
+###' Gets the publications of a specified scholar.
+###' The function only fetches basic information such as title, year and number of citations.
+###' All the other informations presented on this page are not accurate enough
+###' Another function will fetch more accurate information
+###' The function recursively calls itself if the number of publications from the scholar is greater than 100
+###' In this case we recursively call the function on the next 100 until we are done crawling through all publications
+###' 
+###' @param id a string containing a valid Google Scholar ID.  
+###' @param flush_cache should the cache be flushed? 
+###' @param start_index the first publication to load
+###' 
+###' @return a data frame listing the publications and their details.
+###' These include the publication title, author, journal, number,
+###' cites, year, and the publication ID. By default, the list is sorted by citation.
+###' @importFrom stringr str_extract str_sub str_trim str_replace
+###' @importFrom xml2 read_html
+###' @importFrom rvest html_nodes html_text html_attr
+###' @import R.cache
+###' @export
 get_initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_index = 0) {
   
   print("Fetching initial publication list from scholar's page")
@@ -337,17 +337,17 @@ get_initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_in
   nb_publications <- 100 #The maximum number of publications we can have on a given scholar page
   sortby <-"citation"
 
-  ## Define the cache path
+  # Define the cache path
   cache.dir <- file.path(tempdir(), "r-scholar")
   setCacheRootPath(cache.dir)
   
-  ## Clear the cache if requested
+  # Clear the cache if requested
   if (flush_cache) saveCache(NULL, list(scholar_id,start_index))
   
-  ## Check if we've cached it already
+  # Check if already cached
   publication_list <- loadCache(list(scholar_id,start_index))
   
-  ## If not, get the data and save it to cache
+  # If not, get the data and save it to cache
   if (is.null(publication_list)) {
     
     url <- compose_scholar_url(id,start_index=start_index)

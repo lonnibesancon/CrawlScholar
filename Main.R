@@ -149,10 +149,14 @@ publication <- new_pub_list[2,]
 journal_portal <- "http://portal.core.edu.au/jnl-ranks/"
 conference_portal <- "http://portal.core.edu.au/conf-ranks/"
 
-publication$venue <- tolower("IEEE Transactions on Visualization and Computer Graphics")
+publication <- new_pub_list[18,]
+
+res <- get_journal_impact_factor(publication$venue)
 
 test <- get_journal_impact_factor(publication$venue)
+new_pub_list <- curate_publication_list(cleaned_publication_list)
 
+res <- get_batch_journal_impact_factor(new_pub_list$venue)
 for (i in 1:nrow(new_pub_list)){
   res <- get_journal_impact_factor(new_pub_list$venue[i])
   new_pub_list$impact_factor[i] <- res[2]
