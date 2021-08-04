@@ -108,7 +108,7 @@ get_core_ranking_venue <- function(venue,is_journal=TRUE,print_query=FALSE){
 ###' @param max_distance the maximum allowed distance between the venue and a potential match. Set by default at 10 as they might be differences in the use of articles like "The"
 ###' @param list_of_journals a list of journals and their impact factors. This function assumes that it contains at least a column "journal" and a column "IF". Null by default.
 ###' 
-###' @note get_batch_journal_impact_factor() will give it the list of journals
+###' @note get_batch_journal_impact_factor() will give it the list_of_journals paramater
 ###' 
 ###' @return a list containing the name found in the list and the Impact Factor
 ###' @author Lonni Besançon
@@ -123,20 +123,13 @@ get_journal_impact_factor <- function(venue, max_distance=5, list_of_journals=NU
     warning("The venue was empty, returning.")
     return(matching_journal);
   }
-  url <- "https://impactfactorforjournal.com/jcr-2021/"
-  resp <- httr::POST(url)
-  page_html <- read_html(resp)
-  tables <- html_table(page_html)
-  length(tables)
-  list_of_journals <- c()
-  for(i in 1:length(tables)){
-    list_of_journals <- rbind(list_of_journals, as.data.frame(tables[i]))
+  if(length(list_of_journals)==0){
+    list_of_journals <- get_list_of_impact_factors()
+    colnames(list_of_journals) <- c("journal","IF")
   }
-  colnames(list_of_journals) <- c("rank","journal","IF")
-  #We want to remove the old headers from the reading of the HTML page
-  list_of_journals <- list_of_journals[-1,]
+  
   for(i in 1:nrow(list_of_journals)){
-    str_replace_all(list_of_journals$journal[i], "\n", " ")
+    list_of_journals$journal[i] <- str_replace_all(list_of_journals$journal[i], "\n", " ")
     list_of_journals$journal[i] <- str_replace_all(list_of_journals$journal[i], "[^[:alnum:] ]", "") #Maybe use [^a-zA-Z0-9]
   }
   
@@ -152,6 +145,7 @@ get_journal_impact_factor <- function(venue, max_distance=5, list_of_journals=NU
 ###'
 ###' @param venues_list the list of venues to consider
 ###' @param max_distance the maximum allowed distance between the venue and a potential match. Set by default at 10 as they might be differences in the use of articles like "The"
+###' @param list_of_journals a list of journals and their impact factors. This function assumes that it contains at least a column "journal" and a column "IF". Null by default.
 ###'
 ###' @return a dataframe containing the name found in the list and the Impact Factor
 ###' @author Lonni Besançon
@@ -159,7 +153,10 @@ get_journal_impact_factor <- function(venue, max_distance=5, list_of_journals=NU
 ###'   publication_list <- get_publication_list(scholar_id)
 ###'   results <- get_batch_journal_impact_factor(publication_list$venue)
 ###' }
-get_batch_journal_impact_factor <- function(venues_list, max_distance=5){
+get_batch_journal_impact_factor <- function(venues_list, max_distance=5, list_of_journals=NULL){
+  if(is.null(list_of_journals)){
+    list_of_journals <- get_list_of_impact_factors()
+  }
   print("Fetching journal impact factors for the list of venues. This may take a while")
   results <- c()
   length(venues_list)

@@ -51,20 +51,22 @@ compose_publication_url <- function(scholar_id, publication_id){
 ###' @param list
 ###' @param max_distance the maximum distance between the input string and the list.
 ###' @param case_sensitive should the search be case sensitive. Default is FALSE
-###' @param flush_cash if the cash should be flushed
+###' @param flush_cashe if the cash should be flushed
 ###'
 ###' @return the response from GET
 ###' 
 ###' @import R.cache
 ###' @author Lonni Besançon
-get_index_best_matching_string <- function(string,list,max_distance,case_sensitive=FALSE, flush_cash=FALSE){
+get_index_best_matching_string <- function(string,list,max_distance,case_sensitive=FALSE, flush_cashe=FALSE){
   
   # Define the cache path
   cache.dir <- file.path(tempdir(), "r-scholar")
   setCacheRootPath(cache.dir)
   
   # Clear the cache if requested
-  if (flush_cache) saveCache(NULL, list(string,max_distance))
+  if (flush_cache){
+    saveCache(NULL, list(string,max_distance))
+  } 
   
   # Check if already cached
   list_of_distances <- loadCache(list(string,max_distance))
@@ -72,6 +74,7 @@ get_index_best_matching_string <- function(string,list,max_distance,case_sensiti
   # If not, get the data and save it to cache
   if (is.null(list_of_distances)) {
     list_of_distances <- stringdist(tolower(string),tolower(list))
+    saveCache(list_of_distances, key=list(string, max_distance))
   }
   
   
@@ -117,4 +120,34 @@ get_scholar_page <- function(url){
     error_message <- paste("The url you provided is incorrect. Here it is for your reference:",url,sep="\n")
     error(error_message)
   }
+}
+
+###' Returns a dataframe of the list of journal and their impact factor
+###' 
+###' Uses a given url to return the GET response from google scholar. 
+###' URL must be non null and valid
+###' Uses a sleep function so that we do not overwhelm google scholar with GET requests
+###' 
+###' @param url the URL where to find the impact factors. 
+###' 
+###' @notes uses the following list of impact factors by default: https://impactfactorforjournal.com/jcr-2021/
+###'
+###' @return a dataframe of the journal names and impact factors
+###' @importFrom httr POST
+###' @author Lonni Besançon
+get_list_of_impact_factors <- function (url = "https://impactfactorforjournal.com/jcr-2021/"){
+  
+  resp <- httr::POST(url)
+  page_html <- read_html(resp)
+  tables <- html_table(page_html)
+  length(tables)
+  list_impact_factors <- c()
+  for(i in 1:length(tables)){
+    list_impact_factors <- rbind(list_of_journals, as.data.frame(tables[i]))
+  }
+  #We don't want the rank
+  list_impact_factors <- subset(list_impact_factors,select =-1)
+  #We want to remove the old headers from the reading of the HTML page
+  list_impact_factors <- list_impact_factors[-1,]
+  return (list_impact_factors)
 }
