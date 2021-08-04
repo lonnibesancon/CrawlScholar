@@ -23,7 +23,6 @@ get_ascii_string <- function(string){
 compose_scholar_url <- function(scholar_id, start_index = 0, nb_publications= 100){
   site <- "http://scholar.google.com/citations?user="
   arguments <- paste("&cstart=",start_index,"&pagesize=",nb_publications, sep="")
-  print(paste(site,scholar_id,arguments,sep=""))
   return (paste(site,scholar_id,arguments,sep=""))
 }
 
@@ -43,6 +42,38 @@ compose_publication_url <- function(scholar_id, publication_id){
   
 }
 
+###' Returns the index of the best match if found
+###' 
+###' The function considers that a best match is found if the distance between the two strings is lower than a specific distance
+###' 
+###'
+###' @param string
+###' @param list
+###' @param max_distance the maximum distance between the input string and the list.
+###'
+###' @return the response from GET
+###' @author Lonni Besançon
+get_index_best_matching_string <- function(string,list,max_distance){
+  list_of_distances <- stringdist(c(string),list)
+  index_min <- -1
+  min_value <- Inf
+  
+  for(i in 1:length(list_of_distances)){
+    if(list_of_distances[i] < min_value){
+      min_value <- list_of_distances[i]
+      index_min <- i
+    }
+  }
+  if(min_value < max_distance){
+    return (index_min)
+  }
+  else{
+    return (-1)
+  }
+}
+
+
+
 
 ###' Returns the response from a GET request on google scholar
 ###' 
@@ -53,6 +84,8 @@ compose_publication_url <- function(scholar_id, publication_id){
 ###' @param url a valid google scholar URL of a scholar profile
 ###'
 ###' @return the response from GET
+###' @importFrom stringdist stringdist
+###' @author Lonni Besançon
 get_scholar_page <- function(url){
   sleep_time <- x1 <- runif(1, 1.1, 1.6)
   Sys.sleep(sleep_time)
@@ -64,6 +97,4 @@ get_scholar_page <- function(url){
     error_message <- paste("The url you provided is incorrect. Here it is for your reference:",url,sep="\n")
     error(error_message)
   }
-  
-  
 }

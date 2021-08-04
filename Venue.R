@@ -65,6 +65,8 @@ get_core_ranking <- function(publication){
 ###' @param print_query use TRUE if you want to see the GET request that is sent
 ###'
 ###' @return a list containing the name found in the CORE database, the year of the ranking and the ranking
+###' @importFrom xml2 read_html
+###' @importFrom rvest html_table html_text
 ###' @author Lonni Besançon
 ###' @examples {
 ###'   venue <- "IEEE Transactions on Visualization and Computer Graphics"
@@ -103,6 +105,7 @@ get_core_ranking_venue <- function(venue,is_journal=TRUE,print_query=FALSE){
 ###' Gets the journal impact factor for a specific venue
 ###'
 ###' @param venue a specific venue name, has to be a journal name
+###' @param max_distance the maximum allowed distance between the venue and a potential match. Set by default at 10 as they might be differences in the use of articles like "The"
 ###'
 ###' @return a list containing the name found in the list and the Impact Factor
 ###' @author Lonni Besançon
@@ -111,8 +114,27 @@ get_core_ranking_venue <- function(venue,is_journal=TRUE,print_query=FALSE){
 ###'   venue <- str_replace_all(venue, " ","+")
 ###'   ranking <- get_core_ranking_venue(venue)
 ###' }
-get_journal_impact_factor <- function(venue){
+get_journal_impact_factor <- function(venue, max_distance=5){
   url <- "https://impactfactorforjournal.com/jcr-2021/"
-  resp <- httr::GET(url)
+  resp <- httr::POST(url)
   page_html <- read_html(resp)
+  tables <- html_table(page_html)
+  length(tables)
+  list_of_journals <- c()
+  for(i in 1:length(tables)){
+    list_of_journals <- rbind(list_of_journals, as.data.frame(table[i]))
+  }
+  colnames(list_of_journals) <- c("rank","journal","IF")
+  #We want to remove the old headers from the reading of the HTML page
+  list_of_journals <- list_of_journals[-1,]
+  for(i in 1:nrow(list_of_journals)){
+    list_of_journals$journal[i] <- str_replace_all(list_of_journals$journal[i], "[^[:alnum:] ]", "") #Maybe use [^a-zA-Z0-9]
+  }
+  list_of_journals$journal <- tolower(list_of_journals$journal) 
+  index_min <- get_index_best_matching_string(venue, list_of_journals$journal,max_distance)
+  matching_journal <- c(NA,NA)
+  if(index_min!=-1){
+    matching_journal <- c(list_of_journals$journal[index_min],list_of_journals$IF[index_min])
+  }
+  return (matching_journal)
 }

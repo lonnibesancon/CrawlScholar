@@ -145,8 +145,10 @@ write(page_text,"test2.csv")
 
 #Venue tests
 
-publication <- new_pub_list[1,]
+publication <- new_pub_list[2,]
 journal_portal <- "http://portal.core.edu.au/jnl-ranks/"
 conference_portal <- "http://portal.core.edu.au/conf-ranks/"
 
-get_core_ranking(publication)
+publication$venue <- tolower("IEEE Transactions on Visualization and Computer Graphics")
+
+test <- get_journal_impact_factor(publication$venue)
