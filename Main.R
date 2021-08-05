@@ -163,3 +163,17 @@ for (i in 1:nrow(new_pub_list)){
   new_pub_list$journal_found[i] <- res[1]
 }
 
+###### Test getting metrics for a venue
+
+venue <- "CHI"
+get_venue_scholar_metrics(venue, flush_cache = FALSE)
+
+
+#IEEE DOI location:
+#   ""doi"":""10.1109/TVCG.2016.2599217""
+#ACM DOI location
+#   in the link on publication page
+#BMC DOI location
+#   in the link on publication page, arfter "article/"
+#Science (AAS)
+#   ""DOI"":""10.1126/science.abd9338""

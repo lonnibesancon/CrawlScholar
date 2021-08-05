@@ -42,6 +42,24 @@ compose_publication_url <- function(scholar_id, publication_id){
   
 }
 
+
+###' Composes a google scholar URL to find the metrics of a specific venue
+###' 
+###' The venue passed as a parameter will be stripped of all whitespaces to make the query URL valid
+###' 
+###' @param venue a venue name
+###' @importFrom stringr str_replace_all
+###' @return the composed URL
+###' @author Lonni Besançon
+compose_venue_url <- function(venue){
+  page <- "https://scholar.google.com/citations?hl=en&view_op=search_venues&vq="
+  venue <- str_replace_all(venue," ","+")
+  return(paste(page,venue, sep=""))
+  
+}
+
+
+
 ###' Returns the index of the best match if found
 ###' 
 ###' The function considers that a best match is found if the distance between the two strings is lower than a specific distance
@@ -121,6 +139,35 @@ get_scholar_page <- function(url){
     error(error_message)
   }
 }
+
+###' Convenience function to help at finding a match in the core ranking for conferences/journals
+###' 
+###' There is no garanty that the function will produce an output that will find a match
+###' This is based on my own experience with core searches for conferences/journals
+###' Might need some refinements. Send pull requests my way if you have better venue clean-up routines
+###' 
+###' @note Processing is different based on whether the venue is a journal or a conference, remember to set the value of is_journal accordingly
+###' 
+###' @param venue the venue name
+###' @param is_journal set to FALSE for conference 
+###'
+###' @return a string that seems more likely to produce matches in the core ranking for conferences
+###' @importFrom stringr str_c str_replace_all
+###' @author Lonni Besançon
+clean_venue_for_core<- function(venue, is_journal= TRUE){
+  #If it is a journal we only do this, but this should also be done for conferences
+  clean_venue <- str_replace_all(publication$venue, "[^[:alnum:] ]", "") #Maybe use [^a-zA-Z0-9]
+  if(!is_journal){
+    #We need to remove words present in the following list
+    to_replace <- c("Proceedings of the", "Proceedings", "Proceddings of", "Proc of the", "Proc of")
+    patterns <- str_c(to_replace, collapse="|")
+    clean_venue <- str_replace_all(venue, regex(patterns, ignore_case = TRUE), "")
+    #Now we remove numbers
+    clean_venue <- gsub('[[:digit:]]+', '', clean_venue)
+  }
+  return (clean_venue)
+}
+
 
 ###' Returns a dataframe of the list of journal and their impact factor
 ###' 

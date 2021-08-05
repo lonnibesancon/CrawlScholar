@@ -1,4 +1,4 @@
-###' Gets the core ranking for a specific vpublication using its venue field
+###' Convenience function to get the core ranking for a specific vpublication using its venue field
 ###' 
 ###' This returns the core ranking of the venue for a publication
 ###' This function automatically process the venue as input to maximize chances of a match
@@ -8,41 +8,36 @@
 ###' @note To find a match in the core DB, we need to clean the venue's name very often
 ###'       Characters such as "." used in abreviations of a journal's name are likely to prevent a match for a journal.
 ###'       For a conference, the year or the presence of "Proceedings of the" might also prevent a match.
-###'       The core DB only contains computing research venue. Other venues will not be found.
+###'       There is a convenience function in Utils.R called clean_venue_for_core(venue,is_journal) which could help find a match for a conference/journal
 ###'
 ###' @param publication a publication for which we want to know the core ranking
-###'
+###' @importFrom stringr str_replace_all
 ###' @return a list containing the name found in the CORE database, the year of the ranking and the ranking
 ###' @author Lonni Besançon
+'
 get_core_ranking <- function(publication){
+  
   if(is.na(publication$venue)){
     return (list(NA,NA,NA))
   }
   
-  #We look for a journal first
-  #The first thing we need to do is clean the venue of all characters that would prevent a match in the core ranking
-  clean_venue <- str_replace_all(publication$venue, "[^[:alnum:] ]", "") #Maybe use [^a-zA-Z0-9]
-  clean_venue <- str_replace_all(clean_venue, " ","+")
   ranking <- get_core_ranking_venue(clean_venue)
   
   #If this is empty, then it could be a conference
   if(is.na(ranking[1])){
-    #We need to words present in the following list
-    to_replace <- c("Proceedings of the", "Proceedings", "Proceddings of", "Proc of the", "Proc of")
-    patterns <- str_c(to_replace, collapse="|")
-    clean_venue <- str_replace_all(publication$venue, regex(patterns, ignore_case = TRUE), "")
-    #Now we remove numbers
-    clean_venue <- gsub('[[:digit:]]+', '', clean_venue)
-    #And finally all of the whitespaces
-    clean_venue <- str_replace_all(clean_venue, " ","+")
+    
+    #We need to remove whitespace (if any) to prepare the query
+    venue <- str_replace_all(clean_venue, " ","+")
     ranking <- get_core_ranking_venue(clean_venue, is_journal = FALSE)
   }
   
   return(ranking)
   
 }
+'
 
-###' Gets the core ranking for a specific vpublication using its venue field
+
+###' Gets the core ranking for a specific venue
 ###' 
 ###' This returns the core ranking of a given venue as a parameter
 ###' 
@@ -59,6 +54,7 @@ get_core_ranking <- function(publication){
 ###'       Characters such as "." used in abreviations of a journal's name are likely to prevent a match for a journal.
 ###'       For a conference, the year or the presence of "Proceedings of the" might also prevent a match.
 ###'       The core DB only contains computing research venue. Other venues will not be found.
+###'       There is a convenience function in Utils.R called clean_venue_for_core(venue,is_journal) which could help find a match for a conference/journal
 ###' 
 ###' @param venue a specific venue name
 ###' @param is_journal whether the venue is a journal or not (TRUE by default)
@@ -67,6 +63,7 @@ get_core_ranking <- function(publication){
 ###' @return a list containing the name found in the CORE database, the year of the ranking and the ranking
 ###' @importFrom xml2 read_html
 ###' @importFrom rvest html_table html_text
+###' @importFrom stringr str_replace_all
 ###' @author Lonni Besançon
 ###' @examples {
 ###'   venue <- "IEEE Transactions on Visualization and Computer Graphics"
@@ -171,4 +168,57 @@ get_batch_journal_impact_factor <- function(venues_list, max_distance=5, list_of
   }
   close(pb)
   return (results)
+}
+
+
+###' Gets the google scholar metrics for a specific venue
+###' 
+###' In case of multiple results it returns the "index_to_return" in the list
+###'
+###' @note The function uses cache memory to limit call to Google scholar and avoid being blocked by Google.
+###'
+###' @param venue a specific venue name, has to be a journal name
+###' @param index_to_return the index of the result to return, default = 1, set to -1 to get all results
+###' @param flush_cache should the cache be flushed, default = FALSE
+###' 
+###' 
+###' @return a datafrale containing the name and scholar metrics found. If index_to_return == -1, all the results on the page
+###' @author Lonni Besançon
+###' @import R.cache
+###' @examples {
+###'   venue <- "IEEE Transactions on Visualization and Computer Graphics"
+###'   best_match <- get_venue_scholar_metrics(venue)
+###'   all_results <- get_venue_scholar_metrics(venue, index_to_return=-1)
+###' }
+get_venue_scholar_metrics <- function(venue,index_to_return=1,flush_cache=FALSE){
+  
+  # Define the cache path
+  cache.dir <- file.path(tempdir(), "r-scholar")
+  setCacheRootPath(cache.dir)
+  
+  # Clear the cache if requested
+  if (flush_cache) saveCache(NULL, list(venue))
+  
+  # Check if already cached
+  resp <- loadCache(key=list(venue))
+  
+  # If not, get the data and save it to cache
+  if (is.null(resp)) {
+    print("calling scholar query")
+    url <- compose_venue_url(venue)
+    resp <- get_scholar_page(url)
+  }
+  #We save that in the cache
+  saveCache(resp, key=list(venue))
+  
+  
+  html_page <- read_html(resp)
+  table <- as.data.frame(html_table(html_page,index_to_return))
+  if(index_to_return==-1){
+    return (table)
+  }
+  if(index_to_return > nrow(table)){
+    error("Error: index_to_return is greater than the number of results from Google Scholar")
+  }
+  return (table[index_to_return,])
 }
