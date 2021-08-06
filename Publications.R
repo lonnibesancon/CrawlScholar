@@ -160,6 +160,18 @@ clean_publication_data <- function(publication, scholar_id, scholar_name){
   }
   publication$link <- link
   
+  #We also want to get the link to all the other versions
+  #This might come in handy to gather extra information, e.g., when a DOI is not available from this page, it might be from one of the other versions
+  versions <- html_nodes(resp_parsed,"gsc_oms_link")
+  if(length(link)!=0){
+    versions <- html_attr(versions,"href")
+  }
+  else{
+    link <- NA
+  }
+  publication$versions <- versions
+  
+    
   #Finally we get the citation history of the publication
   citation_history <- fetch_publication_citation_history(resp_parsed)
   

@@ -203,33 +203,106 @@ get_list_of_impact_factors <- function (url = "https://impactfactorforjournal.co
 ###' 
 ###' DOIs car be useful for other packages/API calls and so having them can help produce more data on a specific publication
 ###' If the link does not contain the DOI, might need other methods to extract the DOI from within the page that is in the link itself
+###' If multiple DOIs are found it returns the list of all DOIs found
 ###' 
-###' @param link the link to analyse
+###' @param strin the string to analyse
 ###'
-###' @return a DOI if found, NA otherwise
-###' @importFrom stringr str_c str_replace_all str_match
+###' @return the list of DOIs found, NA if none
+###' @importFrom stringr str_split
 ###' @author Lonni Besançon
-get_doi_from_link<- function(venue, is_journal= TRUE){
-  #First we need to find if there is a DOI in the link
+get_dois_from_string<- function(string){
+  #First we need to find if there is a DOI in the string
   
-  doi_part <-str_split(link,"10\\.")
+  doi_part <-str_split(string,"10\\.")
   doi_part<-doi_part[[1]]
+  
+  dois <- c()
+  
   #If doi_part has a length of 0 then there is no doi.
-  if(length(doi_part)==2){
-    doi_part <- doi_part[2]
-    doi_part<-paste0("10.",doi_part)
-    
-    #Now we need to make sure that there is nothing behind the doi
-    #A doi will be in the shape of "prefix/suffix" so if there is anything after this that is of the like "/iaznfoerve" we can remove it
-    split_slash <- str_split(doi_part,"/")
-    split_slash <- split_slash[[1]]
-    if(length(split_slash) != 2){
-      doi_part <- paste0(split_slash[1],split_slash[2])
+  if(length(doi_part)>=2){
+    for(i in 2:length(doi_part)){
+      doi <- doi_part[i]
+      doi<-paste0("10.",doi)
+      doi <- extract_doi_from_string(doi)
+      print(paste0("-----DOI FOUND == ",doi))
+      dois <- append(dois, doi)
     }
-    return (doi_part)
+    
+    return(dois)
   }
   return (NA)
 }
+
+###' Convenience function to extract an exact DOI from a string that contains the DOI and something else
+###' 
+###' 
+###' @param strin the string to analyse, must contain a DOI
+###'
+###' @return the extracted DOI, NA if none is found
+###' @importFrom stringr str_split
+###' @author Lonni Besançon
+extract_doi_from_string <- function(string){
+  #Now we need to make sure that there is nothing behind the doi
+  #A doi will be in the shape of "prefix/suffix" so if there is anything after this that is of the like "/iaznfoerve" we can remove it
+  
+  #so first let's extract the prefix
+  split <- str_split(string, "/")
+  split <- split[[1]]
+  #There was no DOI in this string
+  if(length(split) < 2){
+    return (NA)
+  }
+  else{
+    prefix <- split[1]
+    suffix <- split[2]
+    
+    #Now it's possible that the suffix contains more than the DOI.
+    #In theory, it contains anything that was originally in the text until the next "/"
+    #Now, all we need is to find the next non alphanumeric character except "." and "-" that can be found in DOIs
+    
+    r <- regex("[^a-zA-Z0-9.-]")
+    split <- str_split(suffix, r)
+    split <- split[[1]]
+    suffix <- split[1]
+    
+    #Now we can put prefix and suffix together with "/" added
+    doi <- paste0(prefix, "/", suffix)
+    return (doi)
+  }
+}
+
+###' Convenience function to extract an exact DOI from a string that contains the DOI and something else
+###' 
+###' From all the testing done it would seem that all DOIs from OSF are created by using adding the project/preprint identifier
+###' To the same two prefixes. So all DOIs will be of the shape
+###' 10.31219/osf.io/preprint_ID
+###' 
+###' @param strin the string to analyse, the link to the OSF preprint
+###'
+###' @return the created DOI
+###' @importFrom stringr str_split
+###' @author Lonni Besançon
+get_doi_from_osf <- function(string){
+
+  #If the link contains "osf.io" it can either be in one of these two forms
+  #https://osf.io/preprints/3z7kx/
+  #https://files.osf.io/v1/resources/63efj/providers/osfstorage/60508a5e80460f005c980f1e?format=pdf&action=download&direct&version=2
+  #If it's the first one we can simply split by "/" and extract the ID
+  
+  prefix_osf <- "10.31219/osf.io/"
+  doi <- NA
+  split <- str_split(string, "/")
+  split <- split[[1]]
+  if(grepl("files.osf.io/v1/resources/",string)){
+    doi <- paste0(prefix_osf,split[6])
+  }
+  else{
+    doi <- paste0(prefix_osf,split[5])
+  }
+  return (doi)
+}
+
+
 
 
 

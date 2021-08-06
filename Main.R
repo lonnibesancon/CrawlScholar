@@ -230,10 +230,64 @@ doi_part<-doi_part[[1]]
 for(i in 1:nrow(clean_pub_list)){
   link <- clean_pub_list$link[i]
   print(link)
-  doi <- get_doi_from_link(link)
+  doi <- get_doi_from_string(link)
   clean_pub_list$doi[i] <- doi
   print(doi)
   print("------------")
+}
+
+pubs_without_dois <- c()
+
+for(i in 1:nrow(clean_pub_list)){
+  if(is.na(clean_pub_list$doi[i])){
+    print(paste("I  = ", i))
+    link <- clean_pub_list$link[i]
+    if(is.na(link)){
+      next
+    }
+    if(grepl("osf.io",clean_pub_list$link[i])){
+      clean_pub_list$doi[i] <- get_doi_from_osf(clean_pub_list$link[i])
+    }
+    else{
+      
+      resp <- httr::GET(link)
+      if (httr::status_code(resp) != 200) {
+        print(url)
+        next
+      }
+      
+      html_page <- read_html(resp)
+      text_page <- html_text(html_page)
+      doi_occurence <- get_dois_from_string(text_page)
+      unique_list_of_dois <- table(doi_occurence)
+      if(length(unique_list_of_dois)>1){
+        #We need to disambiguate which ones occurs the most
+        #TODO
+      }
+      else{
+        clean_pub_list$doi[i] <- doi_occurence[1]
+      }
+    }
+  }
+}
+
+
+
+
+link <- "https://scholar.google.fr/citations?view_op=view_citation&hl=fr&user=ulkW7fgAAAAJ&sortby=pubdate&citation_for_view=ulkW7fgAAAAJ:LjlpjdlvIbIC"
+resp_parsed <- httr::GET(link)
+resp_parsed <- read_html(resp_parsed)
+articles <- html_nodes(resp_parsed,".gsc_oms_link")
+#versions now contains the three links at the bottom of the scholar page
+#We need to find, if any, the link to the "All N versions"
+
+index_of_version <- find_index_of_versions(articles)
+
+if(index_of_version!=-1){
+  print(html_attr(articles[index_of_version],"href"))
+}
+else{
+  return (NA)
 }
 
 
@@ -241,6 +295,36 @@ for(i in 1:nrow(clean_pub_list)){
 
 
 
+if
+
+find_index_of_versions <- function(list){
+  if(length(list) ==0){
+    return (-1)
+  }
+  for (i in 1:length(list)){
+    text <- html_text(list[i])
+    if(grepl("version",text)){
+      return (i)
+    }
+  }
+}
+publication$versions <- versions
+
+
+link <- "https://osf.io/preprints/3z7kx/"
+html_page <- read_html(link)
+text_page <- html_text(html_page)
+write(text_page,"test2.csv")
+
+resp <- httr::POST(link)
+html_page <- read_html(resp)
+text_page <- html_text(html_page)
+write(text_page,"test2.csv")
+
+doi_occurence <- get_dois_from_string(text_page)
+
+
+unique_list_of_dois
 
 resp <- get_scholar_page("https://scholar.google.fr/citations?view_op=view_citation&hl=en&user=ulkW7fgAAAAJ&sortby=pubdate&citation_for_view=ulkW7fgAAAAJ:LjlpjdlvIbIC")
 html_page <- read_html(resp)
