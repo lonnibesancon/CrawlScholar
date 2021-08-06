@@ -59,6 +59,7 @@ get_core_ranking <- function(publication){
 ###' @param venue a specific venue name
 ###' @param is_journal whether the venue is a journal or not (TRUE by default)
 ###' @param print_query use TRUE if you want to see the GET request that is sent
+###' @param index_to_return the index of the result to return, default = 1, set to -1 to get all results
 ###'
 ###' @return a list containing the name found in the CORE database, the year of the ranking and the ranking
 ###' @importFrom xml2 read_html
@@ -69,8 +70,10 @@ get_core_ranking <- function(publication){
 ###'   venue <- "IEEE Transactions on Visualization and Computer Graphics"
 ###'   venue <- str_replace_all(venue, " ","+")
 ###'   ranking <- get_core_ranking_venue(venue)
+###'   venue <- "visualization"
+###'   all_matches <- get_core_ranking_venue(venue, index_to_return = -1)
 ###' }
-get_core_ranking_venue <- function(venue,is_journal=TRUE,print_query=FALSE){
+get_core_ranking_venue <- function(venue,is_journal=TRUE,print_query=FALSE,index_to_return=1){
   
   #First we remove all whitespaces if there are any
   venue <- str_replace_all(venue, " ","+")
@@ -90,8 +93,11 @@ get_core_ranking_venue <- function(venue,is_journal=TRUE,print_query=FALSE){
   resp <- httr::GET(url)
   page_html <- read_html(resp)
   tables <- as.data.frame(html_table(page_html))
-  if(!nrow(tables)==0){
-    return(c(tables[1],tables[3],tables[2]))
+  if(!nrow(tables)==0 && index_to_return!=-1){
+    return(c(tables[1,index_to_return],tables[3,index_to_return],tables[2,index_to_return]))
+  }
+  else if(index_to_return==-1){
+    return(tables)
   }
   else{
     return(c(NA,NA,NA))
@@ -182,7 +188,7 @@ get_batch_journal_impact_factor <- function(venues_list, max_distance=5, list_of
 ###' @param flush_cache should the cache be flushed, default = FALSE
 ###' 
 ###' 
-###' @return a datafrale containing the name and scholar metrics found. If index_to_return == -1, all the results on the page
+###' @return a dataframe containing the name and scholar metrics found. If index_to_return == -1, or index_to_return greated than the number of results, returns all the results on the page. If no results, returns an empty dataframe. 
 ###' @author Lonni Besançon
 ###' @import R.cache
 ###' @examples {
@@ -193,7 +199,7 @@ get_batch_journal_impact_factor <- function(venues_list, max_distance=5, list_of
 get_venue_scholar_metrics <- function(venue,index_to_return=1,flush_cache=FALSE){
   
   # Define the cache path
-  cache.dir <- file.path(tempdir(), "r-scholar")
+  cache.dir <- file.path(tempdir(), "schrawlar")
   setCacheRootPath(cache.dir)
   
   # Clear the cache if requested
@@ -214,11 +220,42 @@ get_venue_scholar_metrics <- function(venue,index_to_return=1,flush_cache=FALSE)
   
   html_page <- read_html(resp)
   table <- as.data.frame(html_table(html_page,index_to_return))
+  
+  if(nrow(table) == 0){
+    warning(paste0("There was no match with this venue (",venue,") on google scholar you might want to modify the venue so it is found by google scholar"))
+    return(table)
+  }
+  colnames(table)[1] <- "result.rank"
   if(index_to_return==-1){
     return (table)
   }
   if(index_to_return > nrow(table)){
-    error("Error: index_to_return is greater than the number of results from Google Scholar")
+    warning("index_to_return is greater than the number of results from Google Scholar, returning the whole table")
+    return(table)
   }
   return (table[index_to_return,])
 }
+
+###' Convenience function to get the google scholar metrics for a list of venues
+###' 
+###' In case of multiple results it returns the "index_to_return" in the list
+###'
+###' @note The function will return the first result (if any is available) for all the queries to scholar
+###'
+###' @param venue_list a list of all venues to find in scholar
+###' 
+###' 
+###' @return a dataframe containing the name and scholar metrics found for all venues
+###' @author Lonni Besançon
+###' @examples {
+###'   venues <- c("CHI","Transactions Visualization")
+###'   venues_data <- get_venue_scholar_metrics(venues)
+###' }
+get_batch_venue_scholar_metrics <- function(venue_list){
+  results <- c()
+  for(venue in venue_list){
+    results <- rbind(results,get_venue_scholar_metrics(venue))
+  }
+  return (results)
+}
+

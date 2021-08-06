@@ -156,7 +156,7 @@ get_scholar_page <- function(url){
 ###' @author Lonni Besançon
 clean_venue_for_core<- function(venue, is_journal= TRUE){
   #If it is a journal we only do this, but this should also be done for conferences
-  clean_venue <- str_replace_all(publication$venue, "[^[:alnum:] ]", "") #Maybe use [^a-zA-Z0-9]
+  clean_venue <- str_replace_all(venue, "[^[:alnum:] ]", "") #Maybe use [^a-zA-Z0-9]
   if(!is_journal){
     #We need to remove words present in the following list
     to_replace <- c("Proceedings of the", "Proceedings", "Proceddings of", "Proc of the", "Proc of")
@@ -197,4 +197,46 @@ get_list_of_impact_factors <- function (url = "https://impactfactorforjournal.co
   #We want to remove the old headers from the reading of the HTML page
   list_impact_factors <- list_impact_factors[-1,]
   return (list_impact_factors)
+}
+
+
+
+###' Convenience function to help at finding a match in the google scholar metrics page
+###' 
+###' There is no garanty that the function will produce an output that will find a match
+###' This is based on my own experience with google scholar searches for conferences/journals
+###' Might need some refinements. Send pull requests my way if you have better venue-clean-up routines
+###' 
+###' @note Processing is different based on whether the venue is a journal or a conference, remember to set the value of is_journal accordingly
+###' 
+###' @param venue the venue name
+###' @param is_journal set to FALSE for conference 
+###'
+###' @return a list of strings that seem more likely to produce matches in the scholar metrics queries
+###' @importFrom stringr str_c str_replace_all str_match
+###' @author Lonni Besançon
+clean_venue_for_scholar<- function(venue, is_journal= TRUE){
+  #If it is a journal we only do this, but this should also be done for conferences
+  clean_venue <- str_replace_all(venue, "[^[:alnum:] ]", "") #Maybe use [^a-zA-Z0-9]
+  if(!is_journal){
+    #We need to remove words present in the following list
+    clean_venue <- gsub("[[:digit:]]+th", "", clean_venue)
+    
+    #Find the name of the conference if it is in between "Proceedings of the ... conference" or something similar
+    clean_venue <- str_match(tolower(clean_venue), tolower("Proceedings of the\\s*(.*?)\\s*conference"))
+    print(clean_venue)
+    clean_venue <- clean_venue[,2]
+    #Now clean_venue contains the text between "Proceedings of the ... conference"
+    #But it might also contain a number or a number and "st", "nd", "rd", or "th"
+    #So we want to remove these
+    clean_venue <- gsub("[[:digit:]]+", "", res)
+    print(clean_venue)
+    '
+    to_replace <- c("Proceedings of the", "Proceedings", "Procedings of", "Proc of the", "Proc of")
+    patterns <- str_c(to_replace, collapse="|")
+    clean_venue <- str_replace_all(venue, regex(patterns, ignore_case = TRUE), "")
+    #Now we remove numbers
+    clean_venue <- gsub("[[:digit:]]+", "", clean_venue)'
+  }
+  return (clean_venue)
 }

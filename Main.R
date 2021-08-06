@@ -163,11 +163,66 @@ for (i in 1:nrow(new_pub_list)){
   new_pub_list$journal_found[i] <- res[1]
 }
 
-###### Test getting metrics for a venue
+###### Test getting scholar metrics for a venue
 
 venue <- "CHI"
-get_venue_scholar_metrics(venue, flush_cache = FALSE)
+result <- get_venue_scholar_metrics(venue, index_to_return = 62553,flush_cache = FALSE)
 
+venues <- c("CHI","Transactions Visualization","Medical Research Methodology")
+results <- get_batch_venue_scholar_metrics(venues) 
+
+clean_venue_names <- c()
+for (venue in new_pub_list$venue){
+  print(venue)
+  clean_venue_names <- append(clean_venue_names,clean_venue_for_scholar(venue,is_journal = FALSE))
+}
+
+candidates <- c()
+venue <-new_pub_list$venue[42]
+#test values
+venue <- "Proceedings of the 29th Conference on l'Interaction Homme-Machine"
+venue <- "Proceedings of 29th Conference on l'Interaction Homme-Machine"
+venue <- "Proceedings 2nd Conference on l'Interaction Homme-Machine"
+venue <- "Proc of the 29th Conference on l'Interaction Homme-Machine"
+venue <- "Proc of 29th Conference on l'Interaction Homme-Machine"
+venue <- "Proc 2nd Conference on l'Interaction Homme-Machine"
+venue <-gsub("[[:digit:]]", replacement="", venue)
+#Find the name of the conference if it is in between "Proceedings of the ... conference" or something similar
+candidate <- str_match(tolower(venue), tolower("Proceedings of the\\s*(.*?)\\s*conference"))
+print(candidate)
+candidate <- candidate[,2]
+#We check that the text between  "Proceedings of the ... conference" is not "1st" or "4th"
+if(!any(candidate == c("st","nd","rd","th"))){
+  candidates <- append(candidate)
+}
+candidate <- str_split(tolower(venue),tolower("conference"))
+candidate <- candidate[[1]][2]
+if(!is.null(candidate) || is.na(candidate)){
+  candidates <- append(candidate)
+}
+
+get_venue_scholar_metrics(clean_venue_names[9])
+
+
+#core test
+
+url <- "http://portal.core.edu.au/conf-ranks/?search=VIS&by=all&source=CORE2021&sort=atitle&page=1"
+resp <- httr::GET(url)
+page_html <- read_html(resp)
+tables <- as.data.frame(html_table(page_html))
+
+tables[1,1]
+
+
+#Get publication links and DOI:
+id <- "ulkW7fgAAAAJ"
+initial_list <- get_initial_publication_list(id)
+initial_list[initial_list==""] <- NA
+
+
+
+test <- initial_list[30,]
+clean_pub_list <- get_publication_list(id,test)
 
 #IEEE DOI location:
 #   ""doi"":""10.1109/TVCG.2016.2599217""

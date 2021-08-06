@@ -12,7 +12,7 @@
 get_publication_list <- function(scholar_id, publication_list){
   
   if(missing(scholar_id)) {
-    error("Parameter 'scholar_id' should be set")
+    stop("Parameter 'scholar_id' should be set")
   }
   
   
@@ -64,6 +64,10 @@ get_publication_list <- function(scholar_id, publication_list){
 ###' @param author_name the name of the scholar that we are interested in (optional). It is used to derive their position in the author list
 ###'
 ###' @return the updated publication with more accurate information
+###' 
+###' @importFrom rvest html_read html_attr html_nodes
+###' @importFrom stringr strsplit
+###' 
 clean_publication_data <- function(publication, scholar_id, scholar_name){
   
   #pub_page <- "https://scholar.google.com/citations?view_op=view_citation&hl=en"
@@ -88,11 +92,6 @@ clean_publication_data <- function(publication, scholar_id, scholar_name){
   fields <- html_text(fields)
   
   #Publication venue a particular case and there is already a function to handle this case that we call
-  
-  #We could put this whole thing in a loop if the package on CRAN adapts to a better naming of columns
-  #As of now we leave as it is
-  #Something with a list like this for instance that we just go through items_to_update <- c("Authors","Pages","Publication date","Description")
-  #TODO check with CRAN package author
   
   index <- find_field_index("Authors",fields)
   if(index!=-1){
@@ -134,7 +133,7 @@ clean_publication_data <- function(publication, scholar_id, scholar_name){
     publication$venue <- NA
   }
   
-  
+
   #Now we want to add author position and total number of authors
   authors <- strsplit(publication$author,", ")
   authors <- authors[[1]]
@@ -150,6 +149,17 @@ clean_publication_data <- function(publication, scholar_id, scholar_name){
   position <- match(scholar_name,authors)
   publication$position <- position
   
+  
+  #We want to retrieve the link to the publication itself
+  link <- html_nodes(resp_parsed,".gsc_oci_title_link")
+  if(length(link)!=0){
+    link <- html_attr(link,"href")
+  }
+  else{
+    link <- NA
+  }
+  publication$link <- link
+  
   #Finally we get the citation history of the publication
   citation_history <- fetch_publication_citation_history(resp_parsed)
   
@@ -160,6 +170,8 @@ clean_publication_data <- function(publication, scholar_id, scholar_name){
   #publication$date <- html_text(values[2])
   #publication$journal <- html_text(values[3])
   #publication$number <- html_text(values[4])
+  
+  
   return(publication)
 }
 
@@ -224,11 +236,11 @@ find_venue_index<- function(fields){
 ###' @return the index if the field is found, -1 otherwise.
 find_field_index<- function(field_to_find,fields){
   if(is.null(field_to_find) || is.na(field_to_find)){
-    error("Parameter 'field_to_find' must be set")
+    stop("Parameter 'field_to_find' must be set")
     return (NA);
   }
   if(is.null(fields) || is.na(fields)){
-    error("Parameter 'fields' must be set")
+    stop("Parameter 'fields' must be set")
     return (NA);
   }
   
@@ -268,7 +280,7 @@ curate_publication_list <- function(publication_list){
     return (publication_list)
   }
   publication_list <- publication_list[-index_of_publications_to_remove,]
-  result_message <- paste(length(index_of_publications_to_remove),"1 publication was removed from the list of publications (",index_of_publications_to_remove,")",sep="")
+  result_message <- paste("1 publication was removed from the list of publications (",index_of_publications_to_remove,")",sep="")
   print(result_message)
   
   return(publication_list)
@@ -303,7 +315,7 @@ remove_publications_no_year <- function(publication_list){
     return (publication_list)
   }
   publication_list <- publication_list[-index_of_publications_to_remove,]
-  result_message <- paste(length(index_of_publications_to_remove),"1 publication was removed from the list of publications (",index_of_publications_to_remove,")",sep="")
+  result_message <- paste("1 publication was removed from the list of publications (",index_of_publications_to_remove,")",sep="")
   print(result_message)
   return (publication_list)
 }
@@ -338,7 +350,7 @@ get_initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_in
   sortby <-"citation"
 
   # Define the cache path
-  cache.dir <- file.path(tempdir(), "r-scholar")
+  cache.dir <- file.path(tempdir(), "schrawlar")
   setCacheRootPath(cache.dir)
   
   # Clear the cache if requested
@@ -388,7 +400,7 @@ get_initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_in
     # If we are then we can save the results in the cache
     
     if (start_index == 0) {
-      saveCache(data, key=list(id, start_index))
+      saveCache(publication_list, key=list(id, start_index))
     }
   }
   publication_list[publication_list==""] <- NA
