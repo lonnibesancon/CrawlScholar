@@ -219,10 +219,39 @@ id <- "ulkW7fgAAAAJ"
 initial_list <- get_initial_publication_list(id)
 initial_list[initial_list==""] <- NA
 
+clean_pub_list <- get_publication_list(id)
 
+link <- clean_pub_list$link[8]
+doi <- get_doi_from_link(link)
+
+doi_part <-str_split(link,"10\\.")
+doi_part<-doi_part[[1]]
+
+for(i in 1:nrow(clean_pub_list)){
+  link <- clean_pub_list$link[i]
+  print(link)
+  doi <- get_doi_from_link(link)
+  clean_pub_list$doi[i] <- doi
+  print(doi)
+  print("------------")
+}
+
+
+
+
+
+
+
+resp <- get_scholar_page("https://scholar.google.fr/citations?view_op=view_citation&hl=en&user=ulkW7fgAAAAJ&sortby=pubdate&citation_for_view=ulkW7fgAAAAJ:LjlpjdlvIbIC")
+html_page <- read_html(resp)
+link <- html_nodes(html_page,".gsc_oci_title_link")
+if(length(link)==0){
+  print("0")
+}
+link <- html_attr(link,"href")
 
 test <- initial_list[30,]
-clean_pub_list <- get_publication_list(id,test)
+
 
 #IEEE DOI location:
 #   ""doi"":""10.1109/TVCG.2016.2599217""

@@ -199,6 +199,38 @@ get_list_of_impact_factors <- function (url = "https://impactfactorforjournal.co
   return (list_impact_factors)
 }
 
+###' Convenience function to find a doi in a string (most likely a link)
+###' 
+###' DOIs car be useful for other packages/API calls and so having them can help produce more data on a specific publication
+###' If the link does not contain the DOI, might need other methods to extract the DOI from within the page that is in the link itself
+###' 
+###' @param link the link to analyse
+###'
+###' @return a DOI if found, NA otherwise
+###' @importFrom stringr str_c str_replace_all str_match
+###' @author Lonni Besançon
+get_doi_from_link<- function(venue, is_journal= TRUE){
+  #First we need to find if there is a DOI in the link
+  
+  doi_part <-str_split(link,"10\\.")
+  doi_part<-doi_part[[1]]
+  #If doi_part has a length of 0 then there is no doi.
+  if(length(doi_part)==2){
+    doi_part <- doi_part[2]
+    doi_part<-paste0("10.",doi_part)
+    
+    #Now we need to make sure that there is nothing behind the doi
+    #A doi will be in the shape of "prefix/suffix" so if there is anything after this that is of the like "/iaznfoerve" we can remove it
+    split_slash <- str_split(doi_part,"/")
+    split_slash <- split_slash[[1]]
+    if(length(split_slash) != 2){
+      doi_part <- paste0(split_slash[1],split_slash[2])
+    }
+    return (doi_part)
+  }
+  return (NA)
+}
+
 
 
 ###' Convenience function to help at finding a match in the google scholar metrics page
