@@ -325,9 +325,12 @@ link <- html_attr(link,"href")
 test <- initial_list[30,]
 
 
-
+library(stringr)
 
 #### Getting dois
+for (i in 1:nrow(cleaned_publication_list)){
+  cleaned_publication_list$doi[i] <- get_dois_from_string(cleaned_publication_list$link[i])
+}
 
 #IEEE DOI location:
 #   ""doi"":""10.1109/TVCG.2016.2599217""
