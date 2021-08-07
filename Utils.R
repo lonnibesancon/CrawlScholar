@@ -11,13 +11,36 @@ get_ascii_string <- function(string){
   return (converted)
 }
 
+###' Return the index of the element in a list that contains "version"
+###' 
+###' Use this convenience fonction to find the element that will link to all the other versions of a publication
+###' that can be found at the bottom of a google scholar page.
+###'
+###' @param list a list of all html elements containing a URL at the bottom of a google scholar's page for a publication
+###' 
+###' @return the index of the element that contains "version"
+###' @author Lonni Besançon
+find_index_of_versions <- function(list){
+  if(length(list) ==0){
+    return (-1)
+  }
+  for (i in 1:length(list)){
+    text <- html_text(list[i])
+    if(grepl("version",text)){
+      return (i)
+    }
+  }
+  return (-1)
+}
+
+
 
 ###' Composes a google scholar URL based on an ID
 ###' 
 ###'
 ###' @param scholar_id a valid google scholar ID of a scholar profile
 ###' @param start_index the index from which to start showing publications after they have been ordered
-###' @nb_publications the number of publications to display on the page
+###' @param the number of publications to display on the page
 ###' @return the composed URL
 ###' @author Lonni Besançon
 compose_scholar_url <- function(scholar_id, start_index = 0, nb_publications= 100){

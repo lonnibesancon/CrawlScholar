@@ -46,7 +46,6 @@ id <- "PMZ3h7sAAAAJ" #JDF to check for max number of papers
 scholar <- get_scholar_profile(id)
 scholar_name <- scholar$name 
 
-publication_list <- get_publications(id)
 cleaned_publication_list <- get_publication_list(id)
 
 new_pub_list <- curate_publication_list(cleaned_publication_list)
@@ -274,7 +273,7 @@ for(i in 1:nrow(clean_pub_list)){
 
 
 
-link <- "https://scholar.google.fr/citations?view_op=view_citation&hl=fr&user=ulkW7fgAAAAJ&sortby=pubdate&citation_for_view=ulkW7fgAAAAJ:LjlpjdlvIbIC"
+link <- "https://scholar.google.fr/citations?view_op=view_citation&hl=en&user=ulkW7fgAAAAJ&cstart=20&pagesize=80&citation_for_view=ulkW7fgAAAAJ:ye4kPcJQO24C"
 resp_parsed <- httr::GET(link)
 resp_parsed <- read_html(resp_parsed)
 articles <- html_nodes(resp_parsed,".gsc_oms_link")
@@ -297,17 +296,6 @@ else{
 
 if
 
-find_index_of_versions <- function(list){
-  if(length(list) ==0){
-    return (-1)
-  }
-  for (i in 1:length(list)){
-    text <- html_text(list[i])
-    if(grepl("version",text)){
-      return (i)
-    }
-  }
-}
 publication$versions <- versions
 
 
@@ -336,6 +324,10 @@ link <- html_attr(link,"href")
 
 test <- initial_list[30,]
 
+
+
+
+#### Getting dois
 
 #IEEE DOI location:
 #   ""doi"":""10.1109/TVCG.2016.2599217""

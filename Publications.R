@@ -162,14 +162,24 @@ clean_publication_data <- function(publication, scholar_id, scholar_name){
   
   #We also want to get the link to all the other versions
   #This might come in handy to gather extra information, e.g., when a DOI is not available from this page, it might be from one of the other versions
-  versions <- html_nodes(resp_parsed,"gsc_oms_link")
-  if(length(link)!=0){
-    versions <- html_attr(versions,"href")
+  articles <- html_nodes(resp_parsed,".gsc_oms_link")
+  alt_version <- NA
+  print(articles)
+  print(publication$title)
+  if(length(articles)!=0){
+    #versions now contains the N links at the bottom of the scholar page
+    #We need to find, if any, the link to the "All N versions"
+    index_of_version <- find_index_of_versions(articles)
+    #Now we can store this in the alt_version of publication
+    if(index_of_version!=-1){
+      alt_version <- html_attr(articles[index_of_version],"href")  
+    }
+   
   }
-  else{
-    link <- NA
-  }
-  publication$versions <- versions
+  publication$alt_version <- alt_version
+  
+  
+  
   
     
   #Finally we get the citation history of the publication
