@@ -329,8 +329,63 @@ library(stringr)
 
 #### Getting dois
 
-i <- 4
-cleaned_publication_list$doi[i] <- get_dois_from_string(cleaned_publication_list$link[i])
+#The first step to get DOIs is to check if it is in the link of the publication itself
+for (i in 1:nrow(cleaned_publication_list)){
+  cleaned_publication_list$doi[i]  <- get_dois_from_string(cleaned_publication_list$link[i])
+}
+
+#The second step is to check the content of the link of the publication, this can take a while
+for (i in 1:nrow(cleaned_publication_list)){
+  if(is.na(cleaned_publication_list$doi[i])){
+    print(paste("I = ",i))
+    cleaned_publication_list$doi[i]  <- get_doi_in_link(cleaned_publication_list$link[i])
+  }
+  
+}
+
+link <- "https://scholar.google.fr/scholar?oi=bibs&hl=fr&oe=ASCII&cluster=4531316199160039196"
+link <- "https://scholar.google.fr/scholar?oi=bibs&hl=fr&cluster=7734372823656965600"
+resp <- get_scholar_page(link)
+resp_parsed <- read_html(resp)
+
+res <- html_nodes(resp_parsed, ".gs_rt")
+res <- html_nodes(resp_parsed, "a[data-clk]")
+
+links_to_examine <- html_attr(res, "href")
+dois <- c()
+for (i in 1:length(links_to_examine)){
+  doi <- get_dois_from_string(links_to_examine[i])
+  if(!is.na(doi)){
+    dois <- rbind(dois, doi)
+  }
+}
+#Now if we have found some DOIs, we can stop the search and use the most common DOI
+if(nrow(dois)!=0){
+  doi <- get_item_most_occurences(dois)
+   
+}
+
+link <- "https://scholar.google.com/scholar?oi=bibs&hl=en&oe=ASCII&cluster=9876656273138825261"
+link <- "https://scholar.google.fr/scholar?oi=bibs&hl=fr&cluster=7734372823656965600"
+resp <- get_scholar_page(link)
+resp_parsed2 <- read_html(resp)
+
+
+links <- html_nodes(resp_parsed2, "a")
+
+write.csv(resp_parsed[2],"test2.csv")
+
+print(resp_parsed[2])
+
+links_to_examine <- html_nodes(resp_parsed, "a")
+print(links_to_examine)
+links_to_examine <- html_attr(links_to_examine, "href")
+
+print(links_to_examine)
+
+tmp_publication <- get_dois_for_publications(cleaned_publication_list,deep_search=TRUE)
+
+html_text(res[1])
 
 
 test <- paste("auozrfbreianidoi10.cezucezncjenzcijezcuinez/ezufoiern'\facefineoinfze",cleaned_publication_list$link[i],"/iroevnrue\\vriuenvreja/aeouznea10.fnbeizn fjzna frauifbhreuzifn''' ureincna,eeeeedezdez::",cleaned_publication_list$link[i],sep="")
@@ -353,16 +408,6 @@ dois <- c()
 test <- "aa\abc.def/def\abd.abd...abc.def"
 result <- str_split(test,"abc\\.")
 result <- result[[1]]
-
-
-for (i in 1:nrow(cleaned_publication_list)){
-  doi <- get_dois_from_string(cleaned_publication_list$link[i])
-  print("cleaned_publication_list$doi[i]")
-  print(cleaned_publication_list$doi[i])
-  print("doi")
-  print(doi)
-  cleaned_publication_list$doi[i] <- doi
-}
 
 #IEEE DOI location:
 #   ""doi"":""10.1109/TVCG.2016.2599217""

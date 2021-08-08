@@ -151,7 +151,7 @@ get_index_best_matching_string <- function(string,list,max_distance,case_sensiti
 ###' @importFrom stringdist stringdist
 ###' @author Lonni Besançon
 get_scholar_page <- function(url){
-  sleep_time <- x1 <- runif(1, 1.1, 1.6)
+  sleep_time <- x1 <- runif(1, 1.1, 2.6)
   Sys.sleep(sleep_time)
   resp <- httr::GET(url)
   if (httr::status_code(resp) == 200) {
@@ -159,7 +159,7 @@ get_scholar_page <- function(url){
   }
   else{
     error_message <- paste("The url you provided is incorrect. Here it is for your reference:",url,sep="\n")
-    error(error_message)
+    stop(error_message)
   }
 }
 
@@ -239,23 +239,62 @@ get_list_of_impact_factors <- function (url = "https://impactfactorforjournal.co
 get_dois_from_string<- function(string){
   doi_regex <- "10.\\d{4,9}/[-._;()/:a-z0-9A-Z]+"
   res <- stri_match_all_regex(string,doi_regex)
-  if(is.na(res)){
+  if(length(res)==0 || is.na((res))){
     return (NA)
   }
-  res <- res[[1]]
   
   #Now we might have multiple DOIs found in the string
   #We want to have a list of all of them and their occurence and pick the one that is the most frequent
-  res <- as.data.frame(table(res))
+  return(get_item_most_occurences(res))
+  
+}
+
+###' Convenience function to return the value with the most occurences in a dataframe
+###' 
+###' @param df a dataframe
+###' @return the item that occured the most frequently
+###' 
+###' @author Lonni Besançon
+get_item_most_occurences <- function(df){
+  df <- as.data.frame(table(df))
   index_max_occurence <- -1
   max_occurence <- -1
-  for(i in nrow(res)){
-    if(res$Freq[i] > max_occurence){
-      max_occurence <- res$Freq[i]
+  for(i in nrow(df)){
+    if(as.numeric(df$Freq[i]) > max_occurence){
+      max_occurence <- df$Freq[i]
       index_max_occurence <- i
     }
   }
-  return (as.character(res$res[1]))
+  return (as.character(df[index_max_occurence,1]))
+}
+
+###' Convenience function to find a doi in a webpage
+###' 
+###' DOIs car be useful for other packages/API calls and so having them can help produce more data on a specific publication
+###' If the link does not contain the DOI, might need other methods to extract the DOI from within the page that is in the link itself
+###' If multiple DOIs are found it returns the list of all DOIs found
+###' 
+###' 
+###' @param string the string to analyse
+###'
+###' @return the DOI that has been found, if multiple it only returns the one that has been found the most, NA if the page does not exist or if it can't be parsed
+###' @importFrom httr GET
+###' @importFrom rvest read_html html_text
+###' @author Lonni Besançon
+get_doi_in_link <- function(link){
+  if(is.na(link)){
+    return(NA)
+  }
+  resp <- httr::GET(link)
+  if (httr::status_code(resp) != 200) {
+    return(NA)
+  }
+  resp_parsed <- read_html(resp)
+  resp_parsed <- html_text(resp_parsed)
+  
+  doi <- get_dois_from_string(resp_parsed)
+  
+  return (doi)
 }
 
 ###' Convenience function to find a doi in a string (most likely a link)

@@ -428,3 +428,82 @@ get_initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_in
   publication_list[publication_list==""] <- NA
   return(publication_list)
 }
+
+
+
+###' Gets the DOIs for a list of publications
+###'
+###' DOIs car be useful for other packages/API calls and so having them can help produce more data on a specific publication
+###' If the link does not contain the DOI, might need other methods to extract the DOI from within the page that is in the link itself
+###' If multiple DOIs are found it returns the list of all DOIs found
+###' 
+###' Sometimes the DOI is given in the official link to the publication
+###' Sometimes it is in the webpage of the publication
+###' Sometimes it could be only from "other versions" of the publication as stored by google scholar. This search is time consuming and only activated if deep_search is TRUE
+###' 
+###' @note Finding DOIs in a string is a very complex problem and one that cannot be solved with 100% accuracy. Current solution based on this https://www.findingyourway.io/blog/2019/03/13/2019-03-13_extracting-doi-from-text/
+###' 
+###' @param publication_list a list of publication as formatted by the function get_publication_list()
+###' @param deep_search if set to true, the function will also look in alternative versions of the publication based on its google scholar page to try and find the DOI
+###' 
+###' @return the updated list
+###' @importFrom stringr str_extract str_sub str_trim str_replace
+###' @importFrom xml2 read_html
+###' @importFrom rvest html_nodes html_text html_attr
+###' @import R.cache
+get_dois_for_publications <- function(publication_list, deep_search=TRUE){
+  #The first step to get DOIs is to check if it is in the link of the publication itself
+  #for (i in 1:nrow(publication_list)){
+  #  publication_list$doi[i]  <- get_dois_from_string(publication_list$link[i])
+  #}
+  
+  #The second step is to check the content of the link of the publication, this can take a while
+  #for (i in 1:nrow(publication_list)){
+  #  if(is.na(publication_list$doi[i])){
+  #    doi <- get_doi_in_link(publication_list$link[i])
+  #    publication_list$doi[i] <- doi
+  #  }
+  #}
+  if(deep_search){
+    for (i in 1:nrow(publication_list)){
+      if(is.na(publication_list$doi[i])){
+        if(!is.na(publication_list$alt_version[i])){
+          print(paste("I = ",i))
+          #First let's fetch the google scholar page with the other versions of the publications
+          print(publication_list$alt_version[i])
+          resp <- get_scholar_page(publication_list$alt_version[i])
+          resp_parsed <- read_html(resp)
+          
+          #All links to other versions contain an attribute data-clk
+          links_to_examine <- html_nodes(resp_parsed, "a[data-clk]")
+          print(links_to_examine)
+          links_to_examine <- html_attr(links_to_examine, "href")
+          
+          print(links_to_examine)
+          
+          #Now the first step is to look for DOIs in the links themselves before we analyse the content of the webpage linked (which is more time-consuming)
+          dois <- c()
+          for (i in 1:length(links_to_examine)){
+            doi <- get_dois_from_string(links_to_examine[i])
+            if(!is.na(doi)){
+              dois <- rbind(dois, doi)
+            }
+          }
+          #Now if we have found some DOIs, we can stop the search and use the most common DOI
+          if(is.null(dois)){
+            doi <- NA
+          }
+          else if(nrow(dois)!=0){
+            doi <- get_item_most_occurences(dois)
+            print(paste("DOI",doi, sep=" = "))
+          }
+          publication_list$doi[i] <- doi
+          
+          #If we did not find any DOIs in the links, then we have to examine the page itself
+        }
+      }
+    }
+  }
+  
+  return (publication_list)
+}
