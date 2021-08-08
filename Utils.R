@@ -222,6 +222,42 @@ get_list_of_impact_factors <- function (url = "https://impactfactorforjournal.co
   return (list_impact_factors)
 }
 
+
+###' Convenience function to find a doi in a string
+###' 
+###' DOIs car be useful for other packages/API calls and so having them can help produce more data on a specific publication
+###' If the link does not contain the DOI, might need other methods to extract the DOI from within the page that is in the link itself
+###' If multiple DOIs are found it returns the list of all DOIs found
+###' 
+###' @note Finding DOIs in a string is a very complex problem and one that cannot be solved with 100% accuracy. Current solution based on this https://www.findingyourway.io/blog/2019/03/13/2019-03-13_extracting-doi-from-text/
+###' 
+###' @param string the string to analyse
+###'
+###' @return the DOI that has been found, if multiple it only returns the one that has been found the most
+###' @importFrom stringi stri_match_all_regex
+###' @author Lonni Besançon
+get_dois_from_string<- function(string){
+  doi_regex <- "10.\\d{4,9}/[-._;()/:a-z0-9A-Z]+"
+  res <- stri_match_all_regex(string,doi_regex)
+  if(is.na(res)){
+    return (NA)
+  }
+  res <- res[[1]]
+  
+  #Now we might have multiple DOIs found in the string
+  #We want to have a list of all of them and their occurence and pick the one that is the most frequent
+  res <- as.data.frame(table(res))
+  index_max_occurence <- -1
+  max_occurence <- -1
+  for(i in nrow(res)){
+    if(res$Freq[i] > max_occurence){
+      max_occurence <- res$Freq[i]
+      index_max_occurence <- i
+    }
+  }
+  return (as.character(res$res[1]))
+}
+
 ###' Convenience function to find a doi in a string (most likely a link)
 ###' 
 ###' DOIs car be useful for other packages/API calls and so having them can help produce more data on a specific publication
@@ -233,16 +269,27 @@ get_list_of_impact_factors <- function (url = "https://impactfactorforjournal.co
 ###' @return the list of DOIs found, NA if none
 ###' @importFrom stringr str_split
 ###' @author Lonni Besançon
-get_dois_from_string<- function(string){
+'''get_dois_from_string<- function(string){
   #First we need to find if there is a DOI in the string
   
   doi_part <-str_split(string,"10\\.")
   doi_part<-doi_part[[1]]
   
+  print("doi_part")
+  print(doi_part)
   dois <- c()
   
   #If doi_part has a length of 0 then there is no doi.
-  if(length(doi_part)>=2){
+  
+  #If doi_part has a length of 2, this is a simple case
+  if(length(doi_part)==2){
+    doi <- doi_part[2]
+    doi<-paste0("10.",doi)
+    doi <- extract_doi_from_string(doi)
+    print(paste0("-----DOI FOUND == ",doi))
+    return (doi)
+  }
+  else if(length(doi_part)>2){
     for(i in 2:length(doi_part)){
       doi <- doi_part[i]
       doi<-paste0("10.",doi)
@@ -250,11 +297,10 @@ get_dois_from_string<- function(string){
       print(paste0("-----DOI FOUND == ",doi))
       dois <- append(dois, doi)
     }
-    
     return(dois)
   }
   return (NA)
-}
+}'''
 
 ###' Convenience function to extract an exact DOI from a string that contains the DOI and something else
 ###' 
@@ -264,11 +310,12 @@ get_dois_from_string<- function(string){
 ###' @return the extracted DOI, NA if none is found
 ###' @importFrom stringr str_split
 ###' @author Lonni Besançon
+'''
 extract_doi_from_string <- function(string){
   #Now we need to make sure that there is nothing behind the doi
   #A doi will be in the shape of "prefix/suffix" so if there is anything after this that is of the like "/iaznfoerve" we can remove it
   
-  #so first let's extract the prefix
+  #so first lets extract the prefix
   split <- str_split(string, "/")
   split <- split[[1]]
   #There was no DOI in this string
@@ -279,20 +326,22 @@ extract_doi_from_string <- function(string){
     prefix <- split[1]
     suffix <- split[2]
     
-    #Now it's possible that the suffix contains more than the DOI.
+    #Now it is possible that the suffix contains more than the DOI.
     #In theory, it contains anything that was originally in the text until the next "/"
     #Now, all we need is to find the next non alphanumeric character except "." and "-" that can be found in DOIs
     
     r <- regex("[^a-zA-Z0-9.-]")
     split <- str_split(suffix, r)
     split <- split[[1]]
+    print("split")
+    print(split)
     suffix <- split[1]
     
     #Now we can put prefix and suffix together with "/" added
     doi <- paste0(prefix, "/", suffix)
     return (doi)
   }
-}
+}'''
 
 ###' Convenience function to extract an exact DOI from a string that contains the DOI and something else
 ###' 

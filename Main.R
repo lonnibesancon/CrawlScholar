@@ -328,8 +328,40 @@ test <- initial_list[30,]
 library(stringr)
 
 #### Getting dois
+
+i <- 4
+cleaned_publication_list$doi[i] <- get_dois_from_string(cleaned_publication_list$link[i])
+
+
+test <- paste("auozrfbreianidoi10.cezucezncjenzcijezcuinez/ezufoiern'\facefineoinfze",cleaned_publication_list$link[i],"/iroevnrue\\vriuenvreja/aeouznea10.fnbeizn fjzna frauifbhreuzifn''' ureincna,eeeeedezdez::",cleaned_publication_list$link[i],sep="")
+
+str_extract(test, doi_regex)
+
+res <- stri_match_all_regex(test,doi_regex)
+res <- res[[1]]
+res[1,1]
+res[2,1]
+as.data.frame(table(res))
+
+str_extract("cleaned_publication_list$link[i]", doi_regex)
+
+
+print("doi_part")
+print(doi_part)
+dois <- c()
+
+test <- "aa\abc.def/def\abd.abd...abc.def"
+result <- str_split(test,"abc\\.")
+result <- result[[1]]
+
+
 for (i in 1:nrow(cleaned_publication_list)){
-  cleaned_publication_list$doi[i] <- get_dois_from_string(cleaned_publication_list$link[i])
+  doi <- get_dois_from_string(cleaned_publication_list$link[i])
+  print("cleaned_publication_list$doi[i]")
+  print(cleaned_publication_list$doi[i])
+  print("doi")
+  print(doi)
+  cleaned_publication_list$doi[i] <- doi
 }
 
 #IEEE DOI location:
