@@ -151,7 +151,7 @@ get_index_best_matching_string <- function(string,list,max_distance,case_sensiti
 ###' @importFrom stringdist stringdist
 ###' @author Lonni Besançon
 get_scholar_page <- function(url){
-  sleep_time <- x1 <- runif(1, 1.1, 2.6)
+  sleep_time <- x1 <- runif(1, 2.1, 3.6)
   Sys.sleep(sleep_time)
   resp <- httr::GET(url)
   if (httr::status_code(resp) == 200) {
