@@ -242,7 +242,7 @@ get_dois_from_string<- function(string){
   if(length(res)==0 || is.na((res))){
     return (NA)
   }
-  
+  print(res)
   #Now we might have multiple DOIs found in the string
   #We want to have a list of all of them and their occurence and pick the one that is the most frequent
   return(get_item_most_occurences(res))
@@ -259,7 +259,7 @@ get_item_most_occurences <- function(df){
   df <- as.data.frame(table(df))
   index_max_occurence <- -1
   max_occurence <- -1
-  for(i in nrow(df)){
+  for(i in 1:nrow(df)){
     if(as.numeric(df$Freq[i]) > max_occurence){
       max_occurence <- df$Freq[i]
       index_max_occurence <- i
@@ -275,16 +275,22 @@ get_item_most_occurences <- function(df){
 ###' If multiple DOIs are found it returns the list of all DOIs found
 ###' 
 ###' 
-###' @param string the string to analyse
+###' @param link the link to analyse
+###' @param escape_pdfs should pdfs be escaped, default, TRUE
+###' 
 ###'
 ###' @return the DOI that has been found, if multiple it only returns the one that has been found the most, NA if the page does not exist or if it can't be parsed
 ###' @importFrom httr GET
 ###' @importFrom rvest read_html html_text
 ###' @author Lonni Besançon
-get_doi_in_link <- function(link){
+get_doi_in_link <- function(link, escape_pdf=TRUE){
   if(is.na(link)){
     return(NA)
   }
+  if(grepl(".pdf", link) && escape_pdf){
+    return(NA)
+  }
+  print(link)
   resp <- httr::GET(link)
   if (httr::status_code(resp) != 200) {
     return(NA)

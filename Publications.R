@@ -453,20 +453,27 @@ get_initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_in
 ###' @import R.cache
 get_dois_for_publications <- function(publication_list, deep_search=TRUE){
   #The first step to get DOIs is to check if it is in the link of the publication itself
-  #for (i in 1:nrow(publication_list)){
-  #  publication_list$doi[i]  <- get_dois_from_string(publication_list$link[i])
-  #}
+  for (i in 1:nrow(publication_list)){
+    if(grepl("osf.io",publication_list$link[i])){
+      publication_list$doi[i] <- get_doi_from_osf(publication_list$link[i])
+    }
+    else{
+      publication_list$doi[i]  <- get_dois_from_string(publication_list$link[i])  
+    }
+    
+  }
   
   #The second step is to check the content of the link of the publication, this can take a while
-  #for (i in 1:nrow(publication_list)){
-  #  if(is.na(publication_list$doi[i])){
-  #    doi <- get_doi_in_link(publication_list$link[i])
-  #    publication_list$doi[i] <- doi
-  #  }
-  #}
+  for (i in 1:nrow(publication_list)){
+    if(is.na(publication_list$doi[i])){
+      doi <- get_doi_in_link(publication_list$link[i])
+      publication_list$doi[i] <- doi
+    }
+  }
   if(deep_search){
     for (i in 1:nrow(publication_list)){
       if(is.na(publication_list$doi[i])){
+        print(paste0("I = NA for I = ",i))
         if(!is.na(publication_list$alt_version[i])){
           print(paste("I = ",i))
           #First let's fetch the google scholar page with the other versions of the publications
@@ -479,17 +486,23 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
           print(links_to_examine)
           links_to_examine <- html_attr(links_to_examine, "href")
           
-          print(links_to_examine)
-          
           #Now the first step is to look for DOIs in the links themselves before we analyse the content of the webpage linked (which is more time-consuming)
           dois <- c()
-          for (i in 1:length(links_to_examine)){
-            doi <- get_dois_from_string(links_to_examine[i])
+          for (j in 1:length(links_to_examine)){
+            if(grepl("osf.io",links_to_examine[j])){
+              doi <- get_doi_from_osf(links_to_examine[j])
+            }
+            else{
+              doi <- get_dois_from_string(links_to_examine[j])
+            }
             if(!is.na(doi)){
               dois <- rbind(dois, doi)
             }
           }
+          print(dois)
+          
           #Now if we have found some DOIs, we can stop the search and use the most common DOI
+          #First we check that we have found some DOIS
           if(is.null(dois)){
             doi <- NA
           }
@@ -497,13 +510,29 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
             doi <- get_item_most_occurences(dois)
             print(paste("DOI",doi, sep=" = "))
           }
+          
+          #If this method failed, we can now look at the content of each link themselves
+          if(is.na(doi)){
+            dois <- c()
+            for (j in 1:length(links_to_examine)){
+              doi <- get_doi_in_link(links_to_examine[j])
+              if(!is.na(doi)){
+                dois <- rbind(dois, doi)
+              }
+            }
+            if(is.null(dois)){
+              doi <- NA
+            }
+            else if(nrow(dois)!=0){
+              doi <- get_item_most_occurences(dois)
+              print(paste("DOI",doi, sep=" = "))
+            }
+          }
           publication_list$doi[i] <- doi
           
-          #If we did not find any DOIs in the links, then we have to examine the page itself
         }
       }
     }
   }
-  
   return (publication_list)
 }

@@ -344,14 +344,19 @@ for (i in 1:nrow(cleaned_publication_list)){
 }
 
 link <- "https://scholar.google.fr/scholar?oi=bibs&hl=fr&oe=ASCII&cluster=4531316199160039196"
-link <- "https://scholar.google.fr/scholar?oi=bibs&hl=fr&cluster=7734372823656965600"
+link <- "https://scholar.google.com/scholar?oi=bibs&hl=en&oe=ASCII&cluster=4531316199160039196"
 resp <- get_scholar_page(link)
 resp_parsed <- read_html(resp)
 
 res <- html_nodes(resp_parsed, ".gs_rt")
-res <- html_nodes(resp_parsed, "a[data-clk]")
+links_to_examine <- html_nodes(resp_parsed, "a[data-clk]")
+links_to_examine <- html_attr(links_to_examine,"href")
+as.character(links_to_examine[1])
 
-links_to_examine <- html_attr(res, "href")
+cleaned_publication_list <- get_dois_for_publications(cleaned_publication_list, simple_search = TRUE)
+cleaned_publication_list2 <- get_dois_for_publications(cleaned_publication_list)
+
+#links_to_examine <- html_attr(res, "href")
 dois <- c()
 for (i in 1:length(links_to_examine)){
   doi <- get_dois_from_string(links_to_examine[i])
@@ -360,9 +365,12 @@ for (i in 1:length(links_to_examine)){
   }
 }
 #Now if we have found some DOIs, we can stop the search and use the most common DOI
-if(nrow(dois)!=0){
+if(is.null(dois)){
+  doi <- NA
+}
+el
   doi <- get_item_most_occurences(dois)
-   
+  print(paste("DOI",doi, sep=" = "))
 }
 
 link <- "https://scholar.google.com/scholar?oi=bibs&hl=en&oe=ASCII&cluster=9876656273138825261"
@@ -371,7 +379,7 @@ resp <- get_scholar_page(link)
 resp_parsed2 <- read_html(resp)
 
 
-links <- html_nodes(resp_parsed2, "a")
+links <- html_nodes(resp_parsed2, "a[data-clk-atid]")
 
 write.csv(resp_parsed[2],"test2.csv")
 
