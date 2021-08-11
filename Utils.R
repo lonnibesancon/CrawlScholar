@@ -213,7 +213,7 @@ get_list_of_impact_factors <- function (url = "https://impactfactorforjournal.co
   length(tables)
   list_impact_factors <- c()
   for(i in 1:length(tables)){
-    list_impact_factors <- rbind(list_of_journals, as.data.frame(tables[i]))
+    list_impact_factors <- rbind(list_impact_factors, as.data.frame(tables[i]))
   }
   #We don't want the rank
   list_impact_factors <- subset(list_impact_factors,select =-1)
@@ -232,20 +232,24 @@ get_list_of_impact_factors <- function (url = "https://impactfactorforjournal.co
 ###' @note Finding DOIs in a string is a very complex problem and one that cannot be solved with 100% accuracy. Current solution based on this https://www.findingyourway.io/blog/2019/03/13/2019-03-13_extracting-doi-from-text/
 ###' 
 ###' @param string the string to analyse
+###' @param return_all does it return all of the results or just the one with most occurences, default = FALSE
 ###'
-###' @return the DOI that has been found, if multiple it only returns the one that has been found the most
+###' @return the DOI that has been found, if multiple ones are found, return the index the one found the most if 
 ###' @importFrom stringi stri_match_all_regex
 ###' @author Lonni Besançon
-get_dois_from_string<- function(string){
+get_dois_from_string<- function(string, return_all=FALSE){
   doi_regex <- "10.\\d{4,9}/[-._;()/:a-z0-9A-Z]+"
   res <- stri_match_all_regex(string,doi_regex)
   if(length(res)==0 || is.na((res))){
     return (NA)
   }
-  print(res)
+  res <- res[[1]]
   #Now we might have multiple DOIs found in the string
   #We want to have a list of all of them and their occurence and pick the one that is the most frequent
-  return(get_item_most_occurences(res))
+  if(!return_all){
+    return(get_item_most_occurences(res))  
+  }
+  return(res)
   
 }
 
@@ -277,20 +281,20 @@ get_item_most_occurences <- function(df){
 ###' 
 ###' @param link the link to analyse
 ###' @param escape_pdfs should pdfs be escaped, default, TRUE
+###' @param return_all does the function return all of the results or just the one with most occurences
 ###' 
 ###'
 ###' @return the DOI that has been found, if multiple it only returns the one that has been found the most, NA if the page does not exist or if it can't be parsed
 ###' @importFrom httr GET
 ###' @importFrom rvest read_html html_text
 ###' @author Lonni Besançon
-get_doi_in_link <- function(link, escape_pdf=TRUE){
+get_doi_in_link <- function(link, escape_pdf=TRUE, return_all= FALSE){
   if(is.na(link)){
     return(NA)
   }
   if(grepl(".pdf", link) && escape_pdf){
     return(NA)
   }
-  print(link)
   resp <- httr::GET(link)
   if (httr::status_code(resp) != 200) {
     return(NA)
@@ -298,7 +302,7 @@ get_doi_in_link <- function(link, escape_pdf=TRUE){
   resp_parsed <- read_html(resp)
   resp_parsed <- html_text(resp_parsed)
   
-  doi <- get_dois_from_string(resp_parsed)
+  doi <- get_dois_from_string(resp_parsed, return_all = return_all)
   
   return (doi)
 }

@@ -514,9 +514,9 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
           #If this method failed, we can now look at the content of each link themselves
           if(is.na(doi)){
             dois <- c()
-            for (j in 1:length(links_to_examine)){
-              doi <- get_doi_in_link(links_to_examine[j])
-              if(!is.na(doi)){
+            for (j in 1:length(links)){
+              doi <- get_doi_in_link(links[j], return_all=TRUE)
+              if(!is.null(doi)){
                 dois <- rbind(dois, doi)
               }
             }

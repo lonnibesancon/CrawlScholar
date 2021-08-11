@@ -20,6 +20,7 @@ library(rvest)
 library(RCurl)
 library(XML)
 library(R.cache)
+library(stringdist)
 
 #Documentation for the scholar package is here: https://cran.r-project.org/web/packages/scholar/scholar.pdf
 
@@ -39,7 +40,7 @@ for(i in 1:nrow(list)){
 id <- get_scholar_id(last_name = "Leyrat", first_name = "Clemence")
 
 # Define the id for the researcher
-id <- "ulkW7fgAAAAJ"
+ids <- c("ulkW7fgAAAAJ","rEf29d0AAAAJ","megudlUAAAAJ","lwSLxVgAAAAJ") #Lonni,Arnaud,Evanthia,Ignacio
 id <- "PMZ3h7sAAAAJ" #JDF to check for max number of papers
 
 # Get his profile and print his name
@@ -47,6 +48,19 @@ scholar <- get_scholar_profile(id)
 scholar_name <- scholar$name 
 
 cleaned_publication_list <- get_publication_list(id)
+cleaned_publication_list2 <- get_dois_for_publications(cleaned_publication_list)
+
+for(i in 1:nrow(cleaned_publication_list2)){
+  venue <- cleaned_publication_list2$venue[i]
+  IF <- get_journal_impact_factor(venue)
+  cleaned_publication_list2$IF[i] <- IF
+}
+
+
+
+
+
+
 
 new_pub_list <- curate_publication_list(cleaned_publication_list)
 
