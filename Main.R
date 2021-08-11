@@ -47,18 +47,85 @@ id <- "PMZ3h7sAAAAJ" #JDF to check for max number of papers
 scholar <- get_scholar_profile(id)
 scholar_name <- scholar$name 
 
-cleaned_publication_list <- get_publication_list(id)
-cleaned_publication_list2 <- get_dois_for_publications(cleaned_publication_list)
+cleaned_publication_list <- get_publication_list(ids[2])
+cleaned_publication_list <- get_dois_for_publications(cleaned_publication_list)
 
-for(i in 1:nrow(cleaned_publication_list2)){
-  venue <- cleaned_publication_list2$venue[i]
-  IF <- get_journal_impact_factor(venue)
-  cleaned_publication_list2$IF[i] <- IF
+
+#Venue name cleaning for HCI/VIS people
+for(i in 1:nrow(cleaned_publication_list)){
+  venue <- cleaned_publication_list$venue[i]
+  if(grepl("Vis. Comput.",venue) || grepl("TVCG",venue) || grepl("Visualization and Comp",venue) || grepl("IEEE VIS",venue)){
+    venue <- "IEEE transactions on visualization and computer graphics"
+  }
+  if(grepl("Conference on Human Factors in Computing Systems",venue) || grepl("CHI",venue)){
+    venue <- "Computer Human Interaction (CHI)"
+  }
+  if(grepl("IHM",venue) || grepl("Interaction Homme",venue)){
+    venue <- "Conference on l'Interaction Homme-Machine (IHM)"
+  }
+  if(grepl("EuroVis Posters",venue)){
+    venue <- "Eurographics/IEEE VGTC Conference on Visualization: Posters"
+  }
+  if(grepl("International Symposium on Mixed and Augmented Reality",venue) || grepl("ISMAR",venue)){
+    venue <- "International Symposium on Mixed and Augmented Reality"
+  }
+  cleaned_publication_list$venue[i] <- venue
 }
 
+#Get Journals IFs
+for(i in 1:nrow(cleaned_publication_list)){
+  print(paste0("I = ", i))
+  venue <- cleaned_publication_list$venue[i]
+  IF <- get_journal_impact_factor(venue)[2]
+  cleaned_publication_list$IF[i] <- IF
+  print(IF)
+}
 
+#GetScholarMetrics
+for(i in 1:nrow(cleaned_publication_list)){
+  print(paste0("I = ",i))
+  venue <- cleaned_publication_list$venue[i]
+  result <- get_venue_scholar_metrics(venue)
+  if(length(result)!=0){
+    cleaned_publication_list$h5.index[i] <-  result$h5.index
+    cleaned_publication_list$h5.median[i] <-  result$h5.median
+  }
+  else{
+    cleaned_publication_list$h5.index[i] <-  NA
+    cleaned_publication_list$h5.median[i] <-  NA
+  }
+}
 
+#For the CORE ranking we need to change the venue again
+for(i in 1:nrow(cleaned_publication_list)){
+  print(paste0("I = ",i))
+  venue <- cleaned_publication_list$venue[i]
+  if(!is.na(venue) && ("Computer Human Interaction (CHI)" == venue)){
+    venue <- "International Conference on Human Factors in Computing Systems"
+  }
+  cleaned_publication_list$venue[i] <- venue
+}
 
+#Get CORE Ranking
+for(i in 1:nrow(cleaned_publication_list)){
+  print(paste0("I = ",i))
+  venue <- cleaned_publication_list$venue[i]
+  result <- get_core_ranking_venue(venue,is_journal = TRUE)
+  if(is.na(result)){
+    result <- get_core_ranking_venue(venue, is_journal = FALSE)
+    if(is.na(result)){
+      cleaned_publication_list$core_ranking[i] <- NA
+    }
+    else{
+      cleaned_publication_list$core_ranking[i] <- result$Rank
+    }
+  }
+  else{
+    cleaned_publication_list$core_ranking[i] <- result$Rank
+  }
+}
+
+write.csv(cleaned_publication_list,"Lonni.csv")
 
 
 
@@ -368,7 +435,7 @@ links_to_examine <- html_attr(links_to_examine,"href")
 as.character(links_to_examine[1])
 
 cleaned_publication_list <- get_dois_for_publications(cleaned_publication_list, simple_search = TRUE)
-cleaned_publication_list2 <- get_dois_for_publications(cleaned_publication_list)
+cleaned_publication_list <- get_dois_for_publications(cleaned_publication_list)
 
 #links_to_examine <- html_attr(res, "href")
 dois <- c()

@@ -1,4 +1,4 @@
-###' Convenience function to get the core ranking for a specific vpublication using its venue field
+###' Convenience function to get the core ranking for a specific publication using its venue field
 ###' 
 ###' This returns the core ranking of the venue for a publication
 ###' This function automatically process the venue as input to maximize chances of a match
@@ -61,7 +61,7 @@ get_core_ranking <- function(publication){
 ###' @param print_query use TRUE if you want to see the GET request that is sent
 ###' @param index_to_return the index of the result to return, default = 1, set to -1 to get all results
 ###'
-###' @return a list containing the name found in the CORE database, the year of the ranking and the ranking
+###' @return a dataframe with the results or NA. If index_to_return = 1, only returns the first row of results
 ###' @importFrom xml2 read_html
 ###' @importFrom rvest html_table html_text
 ###' @importFrom stringr str_replace_all
@@ -75,6 +75,9 @@ get_core_ranking <- function(publication){
 ###' }
 get_core_ranking_venue <- function(venue,is_journal=TRUE,print_query=FALSE,index_to_return=1){
   
+  if(is.na(venue)){
+    return(NA)
+  }
   #First we remove all whitespaces if there are any
   venue <- str_replace_all(venue, " ","+")
   
@@ -94,13 +97,13 @@ get_core_ranking_venue <- function(venue,is_journal=TRUE,print_query=FALSE,index
   page_html <- read_html(resp)
   tables <- as.data.frame(html_table(page_html))
   if(!nrow(tables)==0 && index_to_return!=-1){
-    return(c(tables[1,index_to_return],tables[3,index_to_return],tables[2,index_to_return]))
+    return(tables[1,])
   }
   else if(index_to_return==-1){
     return(tables)
   }
   else{
-    return(c(NA,NA,NA))
+    return(NA)
   }
 }
 
@@ -113,7 +116,7 @@ get_core_ranking_venue <- function(venue,is_journal=TRUE,print_query=FALSE,index
 ###' 
 ###' @note get_batch_journal_impact_factor() will give it the list_of_journals paramater
 ###' 
-###' @return a list containing the name found in the list and the Impact Factor
+###' @return a list containing the name found in the list and the Impact Factor (first item of the list is the journal found, secound is the IF). Returns NA if nothing is found
 ###' @author Lonni Besançon
 ###' @examples {
 ###'   venue <- "IEEE Transactions on Visualization and Computer Graphics"
@@ -188,7 +191,7 @@ get_batch_journal_impact_factor <- function(venues_list, max_distance=5, list_of
 ###' @param flush_cache should the cache be flushed, default = FALSE
 ###' 
 ###' 
-###' @return a dataframe containing the name and scholar metrics found. If index_to_return == -1, or index_to_return greated than the number of results, returns all the results on the page. If no results, returns an empty dataframe. 
+###' @return a dataframe containing the name and scholar metrics found. If index_to_return == -1, or index_to_return greated than the number of results, returns all the results on the page. If no results, an empty dataframe
 ###' @author Lonni Besançon
 ###' @import R.cache
 ###' @examples {
@@ -225,7 +228,7 @@ get_venue_scholar_metrics <- function(venue,index_to_return=1,flush_cache=FALSE)
     warning(paste0("There was no match with this venue (",venue,") on google scholar you might want to modify the venue so it is found by google scholar"))
     return(table)
   }
-  colnames(table)[1] <- "result.rank"
+  colnames(table) <- c("result.rank","venue.found","h5.index","h5.median")
   if(index_to_return==-1){
     return (table)
   }
