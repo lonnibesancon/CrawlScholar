@@ -21,6 +21,7 @@ library(RCurl)
 library(XML)
 library(R.cache)
 library(stringdist)
+library(stringi)
 
 #Documentation for the scholar package is here: https://cran.r-project.org/web/packages/scholar/scholar.pdf
 
@@ -44,7 +45,7 @@ ids <- c("ulkW7fgAAAAJ","rEf29d0AAAAJ","megudlUAAAAJ","lwSLxVgAAAAJ") #Lonni,Arn
 id <- "PMZ3h7sAAAAJ" #JDF to check for max number of papers
 
 # Get his profile and print his name
-scholar <- get_scholar_profile(id)
+scholar <- get_scholar_profile(ids[2])
 scholar_name <- scholar$name 
 
 cleaned_publication_list <- get_publication_list(ids[2])

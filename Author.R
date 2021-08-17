@@ -60,7 +60,7 @@ get_scholar_profile <- function(scholar_id) {
   
   scholar <- c()
   
-  scholar$id <- id
+  scholar$id <- scholar_id
   scholar$name <- name
   scholar$affiliation <- affiliation
   scholar$position <-position

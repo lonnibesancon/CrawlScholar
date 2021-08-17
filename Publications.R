@@ -164,8 +164,6 @@ clean_publication_data <- function(publication, scholar_id, scholar_name){
   #This might come in handy to gather extra information, e.g., when a DOI is not available from this page, it might be from one of the other versions
   articles <- html_nodes(resp_parsed,".gsc_oms_link")
   alt_version <- NA
-  print(articles)
-  print(publication$title)
   if(length(articles)!=0){
     #versions now contains the N links at the bottom of the scholar page
     #We need to find, if any, the link to the "All N versions"
@@ -384,7 +382,7 @@ get_initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_in
   # If not, get the data and save it to cache
   if (is.null(publication_list)) {
     
-    url <- compose_scholar_url(id,start_index=start_index)
+    url <- compose_scholar_url(scholar_id,start_index=start_index)
     page_html <- read_html(get_scholar_page(url))
     publications <- html_nodes(page_html,".gsc_a_at")
     
@@ -422,7 +420,7 @@ get_initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_in
     # If we are then we can save the results in the cache
     
     if (start_index == 0) {
-      saveCache(publication_list, key=list(id, start_index))
+      saveCache(publication_list, key=list(scholar_id, start_index))
     }
   }
   publication_list[publication_list==""] <- NA
@@ -514,12 +512,13 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
           #If this method failed, we can now look at the content of each link themselves
           if(is.na(doi)){
             dois <- c()
-            for (j in 1:length(links)){
-              doi <- get_doi_in_link(links[j], return_all=TRUE)
-              if(!is.null(doi)){
+            for (j in 1:length(links_to_examine)){
+              doi <- get_doi_in_link(links_to_examine[j], return_all=TRUE)
+              if(!is.null(doi) && is.na(doi)){
                 dois <- rbind(dois, doi)
               }
             }
+            print(dois)
             if(is.null(dois)){
               doi <- NA
             }

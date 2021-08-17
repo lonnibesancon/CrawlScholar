@@ -263,6 +263,8 @@ get_item_most_occurences <- function(df){
   df <- as.data.frame(table(df))
   index_max_occurence <- -1
   max_occurence <- -1
+  print("df")
+  print(df)
   for(i in 1:nrow(df)){
     if(as.numeric(df$Freq[i]) > max_occurence){
       max_occurence <- df$Freq[i]
