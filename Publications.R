@@ -452,6 +452,7 @@ get_initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_in
 get_dois_for_publications <- function(publication_list, deep_search=TRUE){
   #The first step to get DOIs is to check if it is in the link of the publication itself
   for (i in 1:nrow(publication_list)){
+    print(paste("In publication. I = ",i))
     if(grepl("osf.io",publication_list$link[i])){
       publication_list$doi[i] <- get_doi_from_osf(publication_list$link[i])
     }
@@ -463,6 +464,7 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
   
   #The second step is to check the content of the link of the publication, this can take a while
   for (i in 1:nrow(publication_list)){
+    print(paste("In link content I = ",i))
     if(is.na(publication_list$doi[i])){
       doi <- get_doi_in_link(publication_list$link[i])
       publication_list$doi[i] <- doi
@@ -471,7 +473,7 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
   if(deep_search){
     for (i in 1:nrow(publication_list)){
       if(is.na(publication_list$doi[i])){
-        print(paste0("I = NA for I = ",i))
+        print(paste0("In alt_link for I = ",i))
         if(!is.na(publication_list$alt_version[i])){
           print(paste("I = ",i))
           #First let's fetch the google scholar page with the other versions of the publications
@@ -511,6 +513,7 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
           
           #If this method failed, we can now look at the content of each link themselves
           if(is.na(doi)){
+            print(paste0("In alt_link content for I = ",i))
             dois <- c()
             for (j in 1:length(links_to_examine)){
               doi <- get_doi_in_link(links_to_examine[j], return_all=TRUE)

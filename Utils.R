@@ -265,6 +265,9 @@ get_item_most_occurences <- function(df){
   max_occurence <- -1
   print("df")
   print(df)
+  if(nrow(df) == 0){
+    return (NA)
+  }
   for(i in 1:nrow(df)){
     if(as.numeric(df$Freq[i]) > max_occurence){
       max_occurence <- df$Freq[i]
