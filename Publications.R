@@ -23,11 +23,11 @@ get_publication_list <- function(scholar_id, publication_list){
   
   
   if(missing(publication_list)){
-    warning("'publication_list' was not set, the function automatically fetched the publications from the scholar based on 'scholar_id'")
+    print("'publication_list' was not set, the function automatically fetched the publications from the scholar based on 'scholar_id'")
     publication_list<-get_initial_publication_list(scholar_id, flush_cache = TRUE)
   }
   if(is.null(publication_list)){
-    warning("List of publications is for this scholar")
+    warning("List of publications is null for this scholar")
     return (NA);
   }
   
@@ -265,9 +265,6 @@ find_field_index<- function(field_to_find,fields){
   }
   
   for (index in 1:length(fields)){
-    #(Un)comment lines below for debugging
-    #mess <- paste("fields[index] = ",fields[index]," field_to_find = ",field_to_find,"fields[index] == field_to_find = ",(fields[index] == field_to_find))
-    #print(mess)
     if(fields[index] == field_to_find){
       return (index)
     }
@@ -452,7 +449,6 @@ get_initial_publication_list <- function(scholar_id, flush_cache=FALSE, start_in
 get_dois_for_publications <- function(publication_list, deep_search=TRUE){
   #The first step to get DOIs is to check if it is in the link of the publication itself
   for (i in 1:nrow(publication_list)){
-    print(paste("In publication. I = ",i))
     if(grepl("osf.io",publication_list$link[i])){
       publication_list$doi[i] <- get_doi_from_osf(publication_list$link[i])
     }
@@ -464,7 +460,6 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
   
   #The second step is to check the content of the link of the publication, this can take a while
   for (i in 1:nrow(publication_list)){
-    print(paste("In link content I = ",i))
     if(is.na(publication_list$doi[i])){
       doi <- get_doi_in_link(publication_list$link[i])
       publication_list$doi[i] <- doi
@@ -473,17 +468,13 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
   if(deep_search){
     for (i in 1:nrow(publication_list)){
       if(is.na(publication_list$doi[i])){
-        print(paste0("In alt_link for I = ",i))
         if(!is.na(publication_list$alt_version[i])){
-          print(paste("I = ",i))
           #First let's fetch the google scholar page with the other versions of the publications
-          print(publication_list$alt_version[i])
           resp <- get_scholar_page(publication_list$alt_version[i])
           resp_parsed <- read_html(resp)
           
           #All links to other versions contain an attribute data-clk
           links_to_examine <- html_nodes(resp_parsed, "a[data-clk]")
-          print(links_to_examine)
           links_to_examine <- html_attr(links_to_examine, "href")
           
           #Now the first step is to look for DOIs in the links themselves before we analyse the content of the webpage linked (which is more time-consuming)
@@ -499,7 +490,6 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
               dois <- rbind(dois, doi)
             }
           }
-          print(dois)
           
           #Now if we have found some DOIs, we can stop the search and use the most common DOI
           #First we check that we have found some DOIS
@@ -508,12 +498,10 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
           }
           else if(nrow(dois)!=0){
             doi <- get_item_most_occurences(dois)
-            print(paste("DOI",doi, sep=" = "))
           }
           
           #If this method failed, we can now look at the content of each link themselves
           if(is.na(doi)){
-            print(paste0("In alt_link content for I = ",i))
             dois <- c()
             for (j in 1:length(links_to_examine)){
               doi <- get_doi_in_link(links_to_examine[j], return_all=TRUE)
@@ -521,13 +509,11 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
                 dois <- rbind(dois, doi)
               }
             }
-            print(dois)
             if(is.null(dois)){
               doi <- NA
             }
             else if(nrow(dois)!=0){
               doi <- get_item_most_occurences(dois)
-              print(paste("DOI",doi, sep=" = "))
             }
           }
           publication_list$doi[i] <- doi

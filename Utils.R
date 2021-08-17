@@ -263,8 +263,6 @@ get_item_most_occurences <- function(df){
   df <- as.data.frame(table(df))
   index_max_occurence <- -1
   max_occurence <- -1
-  print("df")
-  print(df)
   if(nrow(df) == 0){
     return (NA)
   }
@@ -329,8 +327,6 @@ get_doi_in_link <- function(link, escape_pdf=TRUE, return_all= FALSE){
   doi_part <-str_split(string,"10\\.")
   doi_part<-doi_part[[1]]
   
-  print("doi_part")
-  print(doi_part)
   dois <- c()
   
   #If doi_part has a length of 0 then there is no doi.
@@ -455,13 +451,11 @@ clean_venue_for_scholar<- function(venue, is_journal= TRUE){
     
     #Find the name of the conference if it is in between "Proceedings of the ... conference" or something similar
     clean_venue <- str_match(tolower(clean_venue), tolower("Proceedings of the\\s*(.*?)\\s*conference"))
-    print(clean_venue)
     clean_venue <- clean_venue[,2]
     #Now clean_venue contains the text between "Proceedings of the ... conference"
     #But it might also contain a number or a number and "st", "nd", "rd", or "th"
     #So we want to remove these
     clean_venue <- gsub("[[:digit:]]+", "", res)
-    print(clean_venue)
     '
     to_replace <- c("Proceedings of the", "Proceedings", "Procedings of", "Proc of the", "Proc of")
     patterns <- str_c(to_replace, collapse="|")

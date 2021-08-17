@@ -126,7 +126,6 @@ get_core_ranking_venue <- function(venue,is_journal=TRUE,print_query=FALSE,index
 get_journal_impact_factor <- function(venue, max_distance=5, list_of_journals=NULL){
   matching_journal <- c(NA,NA)
   if(is.na(venue) || is.null(venue)){
-    warning("The venue was empty, returning.")
     return(matching_journal);
   }
   if(length(list_of_journals)==0){
@@ -225,7 +224,7 @@ get_venue_scholar_metrics <- function(venue,index_to_return=1,flush_cache=FALSE)
   table <- as.data.frame(html_table(html_page,index_to_return))
   
   if(nrow(table) == 0){
-    warning(paste0("There was no match with this venue (",venue,") on google scholar you might want to modify the venue so it is found by google scholar"))
+    #There was no match with this venue on google scholar you might want to modify the venue so it is found by google scholar
     return(table)
   }
   colnames(table) <- c("result.rank","venue.found","h5.index","h5.median")
@@ -233,6 +232,7 @@ get_venue_scholar_metrics <- function(venue,index_to_return=1,flush_cache=FALSE)
     return (table)
   }
   if(index_to_return > nrow(table)){
+    #index_to_return is greater than the number of results from Google Scholar, returning the whole table
     warning("index_to_return is greater than the number of results from Google Scholar, returning the whole table")
     return(table)
   }
