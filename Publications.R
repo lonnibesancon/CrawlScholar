@@ -474,7 +474,8 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
   close(pb)
   
   if(deep_search){
-    print("Deep search enabled, we check if alternative verions of the publications might have the DOI")
+    print("Deep search enabled, we check if alternative verions of the publications might have the DOI eitheir in the link itself or the document behind the link")
+    pb <- txtProgressBar(min = 0, max = nrow(publication_list), initial = 0, style= 3)
     for (i in 1:nrow(publication_list)){
       if(is.na(publication_list$doi[i])){
         if(!is.na(publication_list$alt_version[i])){
@@ -488,8 +489,6 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
           
           #Now the first step is to look for DOIs in the links themselves before we analyse the content of the webpage linked (which is more time-consuming)
           dois <- c()
-          print("First, the links themselves")
-          pb <- txtProgressBar(min = 0, max = length(links_to_examine), initial = 0, style= 3)
           for (j in 1:length(links_to_examine)){
             if(grepl("osf.io",links_to_examine[j])){
               doi <- get_doi_from_osf(links_to_examine[j])
@@ -500,9 +499,7 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
             if(!is.na(doi)){
               dois <- rbind(dois, doi)
             }
-            setTxtProgressBar(pb,j)
           }
-          close(pb)
           #Now if we have found some DOIs, we can stop the search and use the most common DOI
           #First we check that we have found some DOIS
           if(is.null(dois)){
@@ -515,8 +512,6 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
           #If this method failed, we can now look at the content of each link themselves
           if(is.na(doi)){
             dois <- c()
-            print("Then, the content of the pages behind these links")
-            pb <- txtProgressBar(min = 0, max = length(links_to_examine), initial = 0, style= 3)
             for (j in 1:length(links_to_examine)){
               doi <- get_doi_in_link(links_to_examine[j], return_all=TRUE)
               if(!is.null(doi) && is.na(doi)){
@@ -529,13 +524,13 @@ get_dois_for_publications <- function(publication_list, deep_search=TRUE){
             else if(nrow(dois)!=0){
               doi <- get_item_most_occurences(dois)
             }
-            setTxtProgressBar(pb,j)
           }
           publication_list$doi[i] <- doi
-          close(pb)
         }
       }
+      setTxtProgressBar(pb,i)
     }
+    close(pb)
   }
   return (publication_list)
 }
